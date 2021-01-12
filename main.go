@@ -1,7 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+)
 
 func main() {
-	fmt.Println("Hello World!")
+
+	noCPUS := runtime.NumCPU()
+	fmt.Println(noCPUS)
+
 }
