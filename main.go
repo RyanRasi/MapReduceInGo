@@ -85,8 +85,16 @@ func main() {
 				if (additionalCountersNeeded != 0) && (currentRowSelected > baseCounter) {
 					processorAllocatorArray[i][j] = placeholderText
 				}
+				if scanner.Text() == "" {
+					processorAllocatorArray[i][j] = placeholderText
+				}
+				if len(scanner.Text()) < 35 {
+					processorAllocatorArray[i][j] = placeholderText
+				}
 			}
 		}
 	}
 	fmt.Println(processorAllocatorArray[7])
+	//End of Block function
+
 }
