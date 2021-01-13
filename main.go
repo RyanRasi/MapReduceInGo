@@ -60,10 +60,14 @@ func main() {
 	processorAllocatorArray := make([][]string, noCPUS)
 	for i := range processorAllocatorArray {
 		processorAllocatorArray[i] = make([]string, (countersRequired / noCPUS))
+		//for j := range processorAllocatorArray[i] {
+		//	processorAllocatorArray[i][j] = make([]string, 6)
+		//}
 	}
 
 	for i := 0; i < len(processorAllocatorArray); i++ {
 		for j := 0; j < len(processorAllocatorArray[i]); j++ {
+
 			currentRowSelected++
 			lastLineRead := 0
 			//
@@ -93,9 +97,42 @@ func main() {
 					processorAllocatorArray[i][j] = strings.ToUpper(placeholderText)
 				}
 			}
+
 		}
 	}
-	fmt.Println(processorAllocatorArray[7])
+	fmt.Println(processorAllocatorArray[0][0]) //For testing the output
 	//End of Block function
+	//Creating output files
 
+	flightsFromEachAirport := "\nHello World!"
+
+	file, err = os.Create("outputFlightsFromAirport.txt")
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	file.WriteString("Flights from each airport: " + flightsFromEachAirport)
+
+	//Buffer One Test
+	//	currentCPU := 1
+	currentBufferArray := make([][]string, (countersRequired / noCPUS))
+	for i := range currentBufferArray {
+		currentBufferArray[i] = make([]string, 6)
+		//for j := range processorAllocatorArray[i] {
+		//	processorAllocatorArray[i][j] = make([]string, 6)
+		//}
+	}
+	//
+	//currentBufferArray := make([][]string, (countersRequired / noCPUS))
+
+	//processorAllocatorArray[i] = make([]string, (countersRequired / noCPUS))
+	for i := 0; i < len(currentBufferArray); i++ {
+		bufferArray := strings.Split(processorAllocatorArray[0][i], ",")
+		for j := 0; j < len(bufferArray); j++ {
+			currentBufferArray[i][j] = bufferArray[j]
+		}
+
+	}
+	fmt.Println(currentBufferArray[0][3])
 }
