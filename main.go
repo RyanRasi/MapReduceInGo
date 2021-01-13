@@ -17,6 +17,8 @@ func main() {
 	additionalCountersNeeded := 0
 	currentRowSelected := 0
 	placeholderText := "EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY"
+	var airportList [30][5]string
+
 	//Opens file and reads contents
 	file, err := os.Open("./data/test/AComp_Passenger_data_no_error.csv")
 
@@ -155,4 +157,38 @@ func main() {
 		}
 	}
 	fmt.Println(dictPassengersonFlight)
+	//Read from top 30 airports
+
+	//Opens file and reads contents
+	file, err = os.Open("./data/real/Top30_airports_LatLong.csv")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer file.Close()
+
+	scanner = bufio.NewScanner(file)
+	airportListCounter := 0
+	for scanner.Scan() {
+		if scanner.Text() == "" {
+			continue
+		}
+		tempSplit := strings.Split(scanner.Text(), ",")
+
+		//baseCounter++
+		//fmt.Println("TempList is: ", tempSplit)
+		for i := 0; i < len(tempSplit); i++ {
+			airportList[airportListCounter][0] = (tempSplit[1] + "    " + tempSplit[0]) // Combines the Code and the Airport in one variable
+			airportList[airportListCounter][i+1] = tempSplit[i]
+		}
+		airportListCounter++
+	}
+
+	//fmt.Println(airportList)
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	//Closes file
 }
