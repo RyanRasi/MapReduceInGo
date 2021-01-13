@@ -100,7 +100,7 @@ func main() {
 
 		}
 	}
-	fmt.Println(processorAllocatorArray[0][0]) //For testing the output
+	//fmt.Println(processorAllocatorArray[0][0]) //For testing the output
 	//End of Block function
 	//Creating output files
 
@@ -112,27 +112,47 @@ func main() {
 	}
 	defer file.Close()
 
-	file.WriteString("Flights from each airport: " + flightsFromEachAirport)
+	file.WriteString("IATA/FAA Code:    " + "Airport:     " + "Flights from each airport:     " + flightsFromEachAirport)
 
 	//Buffer One Test
 	//	currentCPU := 1
 	currentBufferArray := make([][]string, (countersRequired / noCPUS))
 	for i := range currentBufferArray {
 		currentBufferArray[i] = make([]string, 6)
-		//for j := range processorAllocatorArray[i] {
-		//	processorAllocatorArray[i][j] = make([]string, 6)
-		//}
 	}
-	//
-	//currentBufferArray := make([][]string, (countersRequired / noCPUS))
 
-	//processorAllocatorArray[i] = make([]string, (countersRequired / noCPUS))
 	for i := 0; i < len(currentBufferArray); i++ {
 		bufferArray := strings.Split(processorAllocatorArray[0][i], ",")
 		for j := 0; j < len(bufferArray); j++ {
 			currentBufferArray[i][j] = bufferArray[j]
 		}
-
 	}
-	fmt.Println(currentBufferArray[0][3])
+	fmt.Println(currentBufferArray[0])
+
+	//Flights from each airport [2]
+	dictFlights := make(map[string]int)
+	for i := 0; i < len(currentBufferArray); i++ {
+		//	currentBufferArray[i][2]
+		//}
+
+		flights := strings.Fields(currentBufferArray[i][2])
+
+		for _, flight := range flights {
+			dictFlights[flight]++
+			//Probs if statement
+		}
+	}
+	fmt.Println(dictFlights)
+	//Passengers on each flight-------------------------------------
+	dictPassengersonFlight := make(map[string]int)
+	for i := 0; i < len(currentBufferArray); i++ {
+		//	currentBufferArray[i][2]
+		//}
+		passengerFlights := strings.Fields(currentBufferArray[i][1])
+		for _, flightID := range passengerFlights {
+			dictPassengersonFlight[flightID]++
+			//Probs if statement
+		}
+	}
+	fmt.Println(dictPassengersonFlight)
 }
