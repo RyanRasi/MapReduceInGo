@@ -12,8 +12,11 @@ func main() {
 
 	noCPUS := runtime.NumCPU()
 	fmt.Println(noCPUS)
-	counter := 0
-
+	baseCounter := 0
+	additionalCountersNeeded := 0
+	currentRowSelected := 0
+	placeholderText := "EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY"
+	//Opens file and reads contents
 	file, err := os.Open("./data/test/AComp_Passenger_data_no_error.csv")
 
 	if err != nil {
@@ -25,30 +28,65 @@ func main() {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		counter++
+		baseCounter++
 		//fmt.Println(scanner.Text())
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	//Closes file
+	fmt.Println("Number of lines is: ", baseCounter)
+	fmt.Println("Lines/Processors: ", baseCounter/noCPUS)
+	fmt.Println("Lines/Processors: ", baseCounter%noCPUS == 0)
 
-	fmt.Println("Number of lines is: ", counter)
-	fmt.Println("Lines/Processors: ", counter/noCPUS)
-	fmt.Println("Lines/Processors: ", counter%noCPUS == 0)
+	countersRequired := baseCounter
 
-	currentCounter := counter
-
-	if currentCounter%noCPUS != 0 {
+	if countersRequired%noCPUS != 0 {
 		for {
-			currentCounter++
-			if currentCounter%noCPUS == 0 {
-				fmt.Println(currentCounter)
-				fmt.Println("Lines/Processors: ", currentCounter/noCPUS)
+			countersRequired++
+			if countersRequired%noCPUS == 0 {
+				fmt.Println("Additional Lines and number of lines is ", countersRequired)
+				fmt.Println("Lines/Processors: ", countersRequired/noCPUS)
 				break
 			}
 		}
 
+		additionalCountersNeeded = countersRequired - baseCounter
+		fmt.Println("Additional Counters needed: ", additionalCountersNeeded)
 	}
 
+	processorAllocatorArray := make([][]string, noCPUS)
+	for i := range processorAllocatorArray {
+		processorAllocatorArray[i] = make([]string, (countersRequired / noCPUS))
+	}
+
+	for i := 0; i < len(processorAllocatorArray); i++ {
+		for j := 0; j < len(processorAllocatorArray[i]); j++ {
+			currentRowSelected++
+			lastLineRead := 0
+			//
+			//Opens file and reads contents
+			file, err := os.Open("./data/test/AComp_Passenger_data_no_error.csv")
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			defer file.Close()
+
+			scanner := bufio.NewScanner(file)
+
+			for scanner.Scan() {
+				lastLineRead++
+				if lastLineRead == currentRowSelected {
+					processorAllocatorArray[i][j] = scanner.Text()
+				}
+				if (additionalCountersNeeded != 0) && (currentRowSelected > baseCounter) {
+					processorAllocatorArray[i][j] = placeholderText
+				}
+			}
+		}
+	}
+	fmt.Println(processorAllocatorArray[7])
 }
