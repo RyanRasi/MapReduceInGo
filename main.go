@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strings"
 )
 
 func main() {
@@ -80,16 +81,16 @@ func main() {
 			for scanner.Scan() {
 				lastLineRead++
 				if lastLineRead == currentRowSelected {
-					processorAllocatorArray[i][j] = scanner.Text()
+					processorAllocatorArray[i][j] = strings.ToUpper(scanner.Text())
 				}
 				if (additionalCountersNeeded != 0) && (currentRowSelected > baseCounter) {
-					processorAllocatorArray[i][j] = placeholderText
+					processorAllocatorArray[i][j] = strings.ToUpper(placeholderText)
 				}
 				if scanner.Text() == "" {
-					processorAllocatorArray[i][j] = placeholderText
+					processorAllocatorArray[i][j] = strings.ToUpper(placeholderText)
 				}
 				if len(scanner.Text()) < 35 {
-					processorAllocatorArray[i][j] = placeholderText
+					processorAllocatorArray[i][j] = strings.ToUpper(placeholderText)
 				}
 			}
 		}
