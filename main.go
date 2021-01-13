@@ -106,16 +106,6 @@ func main() {
 	//End of Block function
 	//Creating output files
 
-	flightsFromEachAirport := "\nHello World!"
-
-	file, err = os.Create("outputFlightsFromAirport.txt")
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	file.WriteString("IATA/FAA Code:    " + "Airport:     " + "Flights from each airport:     " + flightsFromEachAirport)
-
 	//Buffer One Test
 	//	currentCPU := 1
 	currentBufferArray := make([][]string, (countersRequired / noCPUS))
@@ -145,18 +135,7 @@ func main() {
 		}
 	}
 	fmt.Println(dictFlights)
-	//Passengers on each flight-------------------------------------
-	dictPassengersonFlight := make(map[string]int)
-	for i := 0; i < len(currentBufferArray); i++ {
-		//	currentBufferArray[i][2]
-		//}
-		passengerFlights := strings.Fields(currentBufferArray[i][1])
-		for _, flightID := range passengerFlights {
-			dictPassengersonFlight[flightID]++
-			//Probs if statement
-		}
-	}
-	fmt.Println(dictPassengersonFlight)
+
 	//Read from top 30 airports
 
 	//Opens file and reads contents
@@ -191,4 +170,54 @@ func main() {
 		log.Fatal(err)
 	}
 	//Closes file
+
+	//Passengers on each flight-------------------------------------
+	dictPassengersonFlight := make(map[string]int)
+	for i := 0; i < len(currentBufferArray); i++ {
+		//	currentBufferArray[i][2]
+		//}
+		passengerFlights := strings.Fields(currentBufferArray[i][1])
+		for _, flightID := range passengerFlights {
+			dictPassengersonFlight[flightID]++
+			//Probs if statement
+		}
+	}
+	fmt.Println(dictPassengersonFlight)
+
+	//Write to txt file, flights from each airport
+
+	flightsFromEachAirport := "\nHello World!"
+
+	file, err = os.Create("outputFlightsFromAirport.txt")
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	file.WriteString("IATA/FAA Code:    " + "Airport:     " + "Flights from each airport:     " + flightsFromEachAirport)
+
+	for i := 0; i < len(airportList); i++ { //Adds all the airports as one to be taken off the count later which will act as the "empty flights"
+		flights := strings.Fields(airportList[i][2])
+		for _, flight := range flights {
+			dictFlights[flight]++
+		}
+	}
+
+	replacementDictFlights := make(map[string]int)
+	for k, v := range dictFlights {
+		for i := 0; i < len(airportList); i++ {
+			if strings.Contains(airportList[i][0], k) {
+				replacementDictFlights[airportList[i][0]] = v
+			}
+		}
+	}
+	dictFlights = replacementDictFlights
+	for k := range dictFlights {
+		dictFlights[k]--
+	}
+
+	fmt.Println("/////////////////////////////////////////////////////////////")
+	fmt.Println(dictFlights)
+	//replacementDictFlights := make(map[string]int)
+
 }
