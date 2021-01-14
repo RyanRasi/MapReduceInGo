@@ -18,7 +18,6 @@ func main() {
 	additionalCountersNeeded := 0
 	currentRowSelected := 0
 	placeholderText := "EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY"
-	var airportList [30][5]string
 
 	//Opens file and reads contents
 	file, err := os.Open("./data/test/AComp_Passenger_data_no_error.csv")
@@ -42,117 +41,140 @@ func main() {
 	//Closes file
 	fmt.Println("Number of lines is: ", baseCounter)
 	fmt.Println("Lines/Processors: ", baseCounter/noCPUS)
-	fmt.Println("Lines/Processors: ", baseCounter%noCPUS == 0)
 
-	countersRequired := baseCounter
+	countersRequired := baseCounter //Calculates additional lines required to make cpu divisable by lines
 
-	if countersRequired%noCPUS != 0 {
+	if countersRequired%noCPUS != 0 { //If there are lines required then...
 		for {
-			countersRequired++
-			if countersRequired%noCPUS == 0 {
+			countersRequired++                //Increase line variable
+			if countersRequired%noCPUS == 0 { //If theyare equal then...
 				fmt.Println("Additional Lines and number of lines is ", countersRequired)
 				fmt.Println("Lines/Processors: ", countersRequired/noCPUS)
 				break
 			}
 		}
-
-		additionalCountersNeeded = countersRequired - baseCounter
-		fmt.Println("Additional Counters needed: ", additionalCountersNeeded)
+		additionalCountersNeeded = countersRequired - baseCounter             //Take the additional lines from the starting to find out how many needed.
+		fmt.Println("Additional Counters needed: ", additionalCountersNeeded) // Output to console
 	}
 
-	processorAllocatorArray := make([][]string, noCPUS)
+	processorAllocatorArray := make([][]string, noCPUS) //Initialises the allocation of lines to processors
 	for i := range processorAllocatorArray {
-		processorAllocatorArray[i] = make([]string, (countersRequired / noCPUS))
-		//for j := range processorAllocatorArray[i] {
-		//	processorAllocatorArray[i][j] = make([]string, 6)
-		//}
+		processorAllocatorArray[i] = make([]string, (countersRequired / noCPUS)) //Make an array for the amount of lines needed / cpu - 49 in this case
 	}
-
-	for i := 0; i < len(processorAllocatorArray); i++ {
-		for j := 0; j < len(processorAllocatorArray[i]); j++ {
-
-			currentRowSelected++
-			lastLineRead := 0
-			//
+	for i := 0; i < len(processorAllocatorArray); i++ { //For however long this array is, 8 in this case, then...
+		for j := 0; j < len(processorAllocatorArray[i]); j++ { //For however long the lines needed per processor is then...
+			currentRowSelected++ //Sets the row counter
+			lastLineRead := 0    //Sets the last line read
 			//Opens file and reads contents
-			file, err := os.Open("./data/test/AComp_Passenger_data_no_error.csv")
-
-			if err != nil {
+			file, err := os.Open("./data/test/AComp_Passenger_data_no_error.csv") //Opens the CSV file
+			if err != nil {                                                       //If there is an error then log it
 				log.Fatal(err)
 			}
+			defer file.Close() //Closes file
 
-			defer file.Close()
-
-			scanner := bufio.NewScanner(file)
-
-			for scanner.Scan() {
-				lastLineRead++
-				if lastLineRead == currentRowSelected {
+			scanner := bufio.NewScanner(file) //Scans each line. This block of code makes sure that the correct rows are allocated to the correct CPU
+			for scanner.Scan() {              //For every line...
+				lastLineRead++                          //Increase the last line read
+				if lastLineRead == currentRowSelected { //If the line equals the row then send the row to the correct part of the array and to upper case
 					processorAllocatorArray[i][j] = strings.ToUpper(scanner.Text())
 				}
-				if (additionalCountersNeeded != 0) && (currentRowSelected > baseCounter) {
+				//Error handling
+				if (additionalCountersNeeded != 0) && (currentRowSelected > baseCounter) { //If additional lines are needed for the processor then the placeholder text is inserted instead
 					processorAllocatorArray[i][j] = strings.ToUpper(placeholderText)
 				}
-				if scanner.Text() == "" {
+				if scanner.Text() == "" { //If If the row is empty then the placeholder text is inserted instead
 					processorAllocatorArray[i][j] = strings.ToUpper(placeholderText)
 				}
-				if len(scanner.Text()) < 35 {
+				if len(scanner.Text()) < 35 { //If the length of the row is less than 35 then the placeholder text is inserted instead
 					processorAllocatorArray[i][j] = strings.ToUpper(placeholderText)
 				}
 			}
 
 		}
 	}
-	//fmt.Println(processorAllocatorArray[0][0]) //For testing the output
-	//End of Block function
-	//Creating output files
-
+	//Processor allocator array contains ALL OF THE DATA
 	//Buffer One Test
-	//	currentCPU := 1
-	currentBufferArray := make([][]string, (countersRequired / noCPUS))
+	processorSelector := 0                                              //	currentCPU := 1
+	currentBufferArray := make([][]string, (countersRequired / noCPUS)) //Current buffer array is just the current processor
 	for i := range currentBufferArray {
-		currentBufferArray[i] = make([]string, 6)
+		currentBufferArray[i] = make([]string, 6) //Array of 6 as that is how many fields there are for the rows
 	}
 
-	for i := 0; i < len(currentBufferArray); i++ {
-		bufferArray := strings.Split(processorAllocatorArray[0][i], ",")
-		for j := 0; j < len(bufferArray); j++ {
-			currentBufferArray[i][j] = bufferArray[j]
+	for i := 0; i < len(currentBufferArray); i++ { //For every 49...
+		tempBufferArray := strings.Split(processorAllocatorArray[processorSelector][i], ",") //Split the string rows into individual components
+		for j := 0; j < len(tempBufferArray); j++ {                                          //For the length of the array then...
+			currentBufferArray[i][j] = tempBufferArray[j] //Set the temp array to the current buffer e.g. [49][6]
 		}
 	}
-	fmt.Println(currentBufferArray[0])
+	//fmt.Println("Current Buffer Array: ", currentBufferArray) //Prints the current buffer
 
-	//Flights from each airport [2]
+	//Flights from each airport - Main part - Counts the number of flights
 	dictFlights := make(map[string]int)
 	for i := 0; i < len(currentBufferArray); i++ {
-		//	currentBufferArray[i][2]
-		//}
 
 		flights := strings.Fields(currentBufferArray[i][2])
 
 		for _, flight := range flights {
 			dictFlights[flight]++
-			//Probs if statement
 		}
 	}
-	fmt.Println(dictFlights)
+	//fmt.Println(dictFlights)
 
 	//Passengers on each flight-------------------------------------
-	dictPassengersonFlight := make(map[string]int)
+	dictPassengersOnEachFlight := make(map[string]int)
 	for i := 0; i < len(currentBufferArray); i++ {
 		//	currentBufferArray[i][2]
 		//}
 		passengerFlights := strings.Fields(currentBufferArray[i][1])
 		for _, flightID := range passengerFlights {
-			dictPassengersonFlight[flightID]++
+			dictPassengersOnEachFlight[flightID]++
 			//Probs if statement
 		}
 	}
-	fmt.Println("Current Buffer Array", currentBufferArray)
-	fmt.Println("Dictionary of Passenger flights", dictPassengersonFlight)
+	//fmt.Println("Current Buffer Array", currentBufferArray) //Prints the lines currently assigned to the processor
+	//
+	fmt.Println(dictPassengersOnEachFlight)
+	textOutput := ""
+	var s string
+	for key, val := range dictPassengersOnEachFlight {
+		// Convert each key/value pair in m to a string
+		s = s + fmt.Sprintf("%s=\"%s\"", key, val) + "\n"
+	}
+	textOutput = s
+
+	outputFile("outputPassengersOnEachFlight", textOutput) // Calls output to file function for flights from each airport task
+	//Passenger flights end-----------------------------------------
 
 	//Call airport list open text file
-
+	var airportList [30][5]string
+	file, err = os.Open("./data/real/Top30_airports_LatLong.csv") //Opens file
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner = bufio.NewScanner(file)
+	airportListCounter := 0 //Sets a counter for each airport
+	for scanner.Scan() {
+		if scanner.Text() == "" { //Handles empty rows
+			continue
+		}
+		tempSplit := strings.Split(scanner.Text(), ",") //Splits data by commas
+		for i := 0; i < len(tempSplit); i++ {
+			if len(tempSplit[0]) < 21 { //If the string is less than 21 characters then a whitespace is added for formatting
+				whiteSpace := 21 - len(tempSplit[0])
+				for i := 0; i < whiteSpace; i++ {
+					tempSplit[0] = tempSplit[0] + " "
+				}
+			}
+			airportList[airportListCounter][0] = (tempSplit[1] + "               " + tempSplit[0]) // Combines the Code and the Airport in one variable
+			airportList[airportListCounter][i+1] = tempSplit[i]                                    // Shifts all the exisiting variables one column up forthe variable above
+		}
+		airportListCounter++
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	//
 	for i := 0; i < len(airportList); i++ { //Adds all the airports as one to be taken off the count later which will act as the "empty flights"
 		flights := strings.Fields(airportList[i][2])
 		for _, flight := range flights {
@@ -163,7 +185,7 @@ func main() {
 	replacementDictFlights := make(map[string]int)
 	for k, v := range dictFlights {
 		for i := 0; i < len(airportList); i++ {
-			if strings.Contains(airportList[i][0], k) {
+			if strings.Contains(airportList[i][0], k) { //Renmaes just the airport code to the airport airportName with the code
 				replacementDictFlights[airportList[i][0]] = v
 			}
 		}
@@ -175,39 +197,25 @@ func main() {
 
 	fmt.Println("/////////////////////////////////////////////////////////////")
 
-	names := make([]string, 0, len(dictFlights))
-	for name := range dictFlights {
-		names = append(names, name)
+	airports := make([]string, 0, len(dictFlights))
+	for airportName := range dictFlights {
+		airports = append(airports, airportName)
 	}
-	fmt.Println(names)
-	fmt.Println()
-
-	sort.Slice(names, func(i, j int) bool {
-		return dictFlights[names[i]] > dictFlights[names[j]]
+	sort.Slice(airports, func(i, j int) bool {
+		return dictFlights[airports[i]] > dictFlights[airports[j]]
 	})
-	fmt.Println(names)
-	fmt.Println()
-	textOutput := ""
+	textOutput = ""
 
-	for _, name := range names {
-		//fmt.Printf("%-7v %v\n", name, dictFlights[name])
-		textOutput = textOutput + name + fmt.Sprintf("%d", dictFlights[name]) + "\n"
+	for _, airportName := range airports {
+		//fmt.Printf("%-7v %v\n", airportName, dictFlights[airportName])
+		textOutput = textOutput + airportName + fmt.Sprintf("%d", dictFlights[airportName]) + "\n"
 	}
-
-	//fmt.Println(textOutput)
-
-	//fmt.Println(dictFlights)
-	//replacementDictFlights := make(map[string]int)
-
-	//var textOutput string
 	outputFile("outputFlightsFromAirport", textOutput) // Calls output to file function for flights from each airport task
-
 }
 func flightsFromEachAirport(data string) {
 
 }
-func inputFile(fileID string, taskID string) {
-
+func inputFile(fileID string) {
 }
 func outputFile(fileID string, textOutput string) {
 
