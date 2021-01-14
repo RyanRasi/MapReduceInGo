@@ -23,8 +23,9 @@ func main() {
 	//Declares and Initiliases Empty Variables
 	baseLines := 0
 	//additionalLinesNeeded := 0
+	totalLines := 0
 	currentLineSelected := 0
-	placeholderText := "EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY"
+	//placeholderText := "EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY"
 	passengerDataPath := "./data/real/AComp_Passenger_data.csv"
 	re := regexp.MustCompile(`^[a-zA-Z0-9,]*$`)
 	unknownEntries := ""
@@ -39,15 +40,21 @@ func main() {
 	scanner := bufio.NewScanner(file) //For every file, increment the base lines variable
 	for scanner.Scan() {
 		if len(scanner.Text()) > 15 { //Error handling - If the text length is a low number then it is not counted in the variable
-			baseLines++
+			match := re.FindStringSubmatch(scanner.Text()) //REGEX to get rid of symbols and characters that are not a letter or number
+			if len(match) != 0 {
+				baseLines++
+			}
 		}
+		totalLines++
 	}
 	if err := scanner.Err(); err != nil { //Log error if there is one
 		log.Fatal(err)
 	}
+	fmt.Println("Total Lines: ", baseLines)
 	//Closes file
 	extraLinesNeeded := checkLinesPerProcessor(baseLines, noCPUS)
 
+	fmt.Println((baseLines + extraLinesNeeded) / noCPUS)
 	//Sets up allocating array for the processor
 	processorAllocatedLines := make([][]string, noCPUS) //Initialises the allocation of lines to processors
 	for i := range processorAllocatedLines {
@@ -74,12 +81,18 @@ func main() {
 							processorAllocatedLines[i][j] = strings.ToUpper(scanner.Text())
 						} else {
 							unknownEntries = unknownEntries + scanner.Text() + "\n"
+							j = j - 1
 						}
+					} else {
+						unknownEntries = unknownEntries + scanner.Text() + "\n"
+						j = j - 1
 					}
 				}
-				if (extraLinesNeeded != 0) && (currentLineSelected > baseLines) {
-					processorAllocatedLines[i][j] = strings.ToUpper(placeholderText)
-				}
+				//if () {
+				//	extraLinesNeeded = extraLinesNeeded - 1
+				//	processorAllocatedLines[i][j] = strings.ToUpper(placeholderText)
+				//}
+				//rowTracker =
 			}
 		}
 	}
@@ -101,13 +114,12 @@ func checkLinesPerProcessor(lines int, cpus int) int {
 				break
 			}
 		}
-		additionalLinesNeeded = additionalLines - lines                    //Take the additional lines from the starting to find out how many needed.
-		fmt.Println("Additional Counters needed: ", additionalLinesNeeded) // Output to console
+		additionalLinesNeeded = additionalLines - lines                 //Take the additional lines from the starting to find out how many needed.
+		fmt.Println("Additional Lines needed: ", additionalLinesNeeded) // Output to console
 	}
 	return additionalLinesNeeded
 }
 func outputFile(fileID string, textOutput string, outputFormat int) {
-
 	//Write to txt file, flights from each airport
 	file, err := os.Create("./output/" + fileID + ".txt")
 	if err != nil {
