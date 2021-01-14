@@ -12,15 +12,16 @@ import (
 
 func main() {
 
-	noCPUS := runtime.NumCPU()
-	fmt.Println(noCPUS)
-	baseCounter := 0
-	additionalCountersNeeded := 0
-	currentRowSelected := 0
+	noCPUS := runtime.NumCPU() //Calculates Current CPUs
+	fmt.Println("Processors Available: ", noCPUS)
+
+	baseLines := 0
+	additionalLinesNeeded := 0
+	currentLineSelected := 0
 	placeholderText := "EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY"
 
 	//Opens file and reads contents
-	file, err := os.Open("./data/test/AComp_Passenger_data_no_error.csv")
+	file, err := os.Open("./data/real/AComp_Passenger_data.csv")
 
 	if err != nil {
 		log.Fatal(err)
@@ -31,7 +32,7 @@ func main() {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		baseCounter++
+		baseLines++
 		//fmt.Println(scanner.Text())
 	}
 
@@ -39,10 +40,10 @@ func main() {
 		log.Fatal(err)
 	}
 	//Closes file
-	fmt.Println("Number of lines is: ", baseCounter)
-	fmt.Println("Lines/Processors: ", baseCounter/noCPUS)
+	fmt.Println("Number of lines is: ", baseLines)
+	fmt.Println("Lines/Processors: ", baseLines/noCPUS)
 
-	countersRequired := baseCounter //Calculates additional lines required to make cpu divisable by lines
+	countersRequired := baseLines //Calculates additional lines required to make cpu divisable by lines
 
 	if countersRequired%noCPUS != 0 { //If there are lines required then...
 		for {
@@ -53,8 +54,8 @@ func main() {
 				break
 			}
 		}
-		additionalCountersNeeded = countersRequired - baseCounter             //Take the additional lines from the starting to find out how many needed.
-		fmt.Println("Additional Counters needed: ", additionalCountersNeeded) // Output to console
+		additionalLinesNeeded = countersRequired - baseLines               //Take the additional lines from the starting to find out how many needed.
+		fmt.Println("Additional Counters needed: ", additionalLinesNeeded) // Output to console
 	}
 
 	processorAllocatorArray := make([][]string, noCPUS) //Initialises the allocation of lines to processors
@@ -63,26 +64,27 @@ func main() {
 	}
 	for i := 0; i < len(processorAllocatorArray); i++ { //For however long this array is, 8 in this case, then...
 		for j := 0; j < len(processorAllocatorArray[i]); j++ { //For however long the lines needed per processor is then...
-			currentRowSelected++ //Sets the row counter
-			lastLineRead := 0    //Sets the last line read
+			currentLineSelected++ //Sets the row counter
+			lastLineRead := 0     //Sets the last line read
 			//Opens file and reads contents
-			file, err := os.Open("./data/test/AComp_Passenger_data_no_error.csv") //Opens the CSV file
-			if err != nil {                                                       //If there is an error then log it
+			file, err := os.Open("./data/real/AComp_Passenger_data.csv") //Opens the CSV file
+			if err != nil {                                              //If there is an error then log it
 				log.Fatal(err)
 			}
 			defer file.Close() //Closes file
 
 			scanner := bufio.NewScanner(file) //Scans each line. This block of code makes sure that the correct rows are allocated to the correct CPU
 			for scanner.Scan() {              //For every line...
-				lastLineRead++                          //Increase the last line read
-				if lastLineRead == currentRowSelected { //If the line equals the row then send the row to the correct part of the array and to upper case
+				fmt.Println(scanner.Text())
+				lastLineRead++                           //Increase the last line read
+				if lastLineRead == currentLineSelected { //If the line equals the row then send the row to the correct part of the array and to upper case
 					processorAllocatorArray[i][j] = strings.ToUpper(scanner.Text())
 				}
 				//Error handling
-				if (additionalCountersNeeded != 0) && (currentRowSelected > baseCounter) { //If additional lines are needed for the processor then the placeholder text is inserted instead
+				if (additionalLinesNeeded != 0) && (currentLineSelected > baseLines) { //If additional lines are needed for the processor then the placeholder text is inserted instead
 					processorAllocatorArray[i][j] = strings.ToUpper(placeholderText)
 				}
-				if scanner.Text() == "" { //If If the row is empty then the placeholder text is inserted instead
+				if scanner.Text() == "" { //If the row is empty then the placeholder text is inserted instead
 					processorAllocatorArray[i][j] = strings.ToUpper(placeholderText)
 				}
 				if len(scanner.Text()) < 35 { //If the length of the row is less than 35 then the placeholder text is inserted instead
@@ -92,6 +94,7 @@ func main() {
 
 		}
 	}
+	//fmt.Println(processorAllocatorArray)
 	//Processor allocator array contains ALL OF THE DATA
 	//Buffer One Test
 	processorSelector := 0                                              //	currentCPU := 1
@@ -125,7 +128,8 @@ func main() {
 	for i := 0; i < len(currentBufferArray); i++ {
 		//	currentBufferArray[i][2]
 		//}
-		passengerFlights := strings.Fields(currentBufferArray[i][1])
+		concatonatePassengerFlights := currentBufferArray[i][1] + "-" + currentBufferArray[i][2] + "-" + currentBufferArray[i][3]
+		passengerFlights := strings.Fields(concatonatePassengerFlights)
 		for _, flightID := range passengerFlights {
 			dictPassengersOnEachFlight[flightID]++
 			//Probs if statement
@@ -138,11 +142,13 @@ func main() {
 	var s string
 	for key, val := range dictPassengersOnEachFlight {
 		// Convert each key/value pair in m to a string
-		s = s + fmt.Sprintf("%s=\"%s\"", key, val) + "\n"
+		s = s + fmt.Sprintf("%s=\"%s", key, val) + "\n"
 	}
-	textOutput = s
+	textOutput = strings.Replace(s, ")", "", -1)
+	textOutput = strings.Replace(textOutput, "=\"%!s(int=", "          ", -1) //Formats text to replace characters with whitespace
+	textOutput = strings.Replace(textOutput, "-", "          ", -1)           //Formats text to replace characters with whitespace
 
-	outputFile("outputPassengersOnEachFlight", textOutput) // Calls output to file function for flights from each airport task
+	outputFile("outputPassengersOnEachFlight", textOutput, 2) // Calls output to file function for flights from each airport task
 	//Passenger flights end-----------------------------------------
 
 	//Call airport list open text file
@@ -210,14 +216,14 @@ func main() {
 		//fmt.Printf("%-7v %v\n", airportName, dictFlights[airportName])
 		textOutput = textOutput + airportName + fmt.Sprintf("%d", dictFlights[airportName]) + "\n"
 	}
-	outputFile("outputFlightsFromAirport", textOutput) // Calls output to file function for flights from each airport task
+	outputFile("outputFlightsFromAirport", textOutput, 1) // Calls output to file function for flights from each airport task
 }
 func flightsFromEachAirport(data string) {
 
 }
 func inputFile(fileID string) {
 }
-func outputFile(fileID string, textOutput string) {
+func outputFile(fileID string, textOutput string, outputFormat int) {
 
 	//Write to txt file, flights from each airport
 	file, err := os.Create(fileID + ".txt")
@@ -225,5 +231,11 @@ func outputFile(fileID string, textOutput string) {
 		return
 	}
 	defer file.Close()
-	file.WriteString("IATA/FAA Code:    " + "Airport:     " + "        Flights: " + "\n" + textOutput)
+	if outputFormat == 1 {
+		file.WriteString("IATA/FAA Code:    " + "Airport:     " + "        Flights: " + "\n" + textOutput)
+	} else if outputFormat == 2 {
+		file.WriteString("Flight Number:    " + "Depart:      " + "Arrival:     " + "Passengers on Flight: " + "\n" + textOutput)
+	} else if outputFormat == 3 {
+		file.WriteString("Flight Number:    " + "Depart:      " + "Arrival:     " + "Miles(Nautical): " + "\n" + textOutput)
+	}
 }
