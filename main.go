@@ -54,7 +54,7 @@ func main() {
 	//Closes file
 	extraLinesNeeded := checkLinesPerProcessor(baseLines, noCPUS)
 
-	fmt.Println((baseLines + extraLinesNeeded) / noCPUS)
+	fmt.Println("Lines allocated per processor: ", (baseLines+extraLinesNeeded)/noCPUS)
 	//Sets up allocating array for the processor
 	processorAllocatedLines := make([][]string, noCPUS) //Initialises the allocation of lines to processors
 	for i := range processorAllocatedLines {
@@ -97,7 +97,23 @@ func main() {
 		}
 	}
 	outputFile("outputPassengerErrorDataEntries", unknownEntries, 0) // Calls output to file function for passenger data entries with an error
-	fmt.Println(processorAllocatedLines)
+	//----fmt.Println(processorAllocatedLines)
+
+	//FOR PROCESSOR ONE---------------------------------------------------
+	processorOne := 0
+	processorOneDataArray := make([][]string, ((baseLines + extraLinesNeeded) / noCPUS)) //Current buffer array is just the current processor
+	for i := range processorOneDataArray {
+		processorOneDataArray[i] = make([]string, 6) //Array of 6 as that is how many fields there are for the rows
+	}
+
+	for i := 0; i < len(processorOneDataArray); i++ { //For every 49...
+		tempBufferArray := strings.Split(processorAllocatedLines[processorOne][i], ",") //Split the string rows into individual components
+		for j := 0; j < len(tempBufferArray); j++ {                                     //For the length of the array then...
+			processorOneDataArray[i][j] = tempBufferArray[j] //Set the temp array to the current buffer e.g. [49][6]
+		}
+	}
+	//Calls passengers on each flight
+	passengersOnEachFlight(processorOneDataArray)
 }
 
 func inputFile(fileID string) {
@@ -128,5 +144,34 @@ func outputFile(fileID string, textOutput string, outputFormat int) {
 	defer file.Close()
 	if outputFormat == 0 {
 		file.WriteString("Passenger Data Entries with Errors Below: " + "\n\n" + textOutput)
+	} else if outputFormat == 1 {
+		file.WriteString("Flight Number:    " + "Depart:      " + "Arrival:     " + "Passengers on Flight: " + "\n" + textOutput)
 	}
+}
+func passengersOnEachFlight(processorArray [][]string) {
+	dictPassengersOnEachFlight := make(map[string]int)
+	for i := 0; i < len(processorArray); i++ {
+		//	processorArray[i][2]
+		//}
+		concatonatePassengerFlights := processorArray[i][1] + "-" + processorArray[i][2] + "-" + processorArray[i][3]
+		passengerFlights := strings.Fields(concatonatePassengerFlights)
+		for _, flightID := range passengerFlights {
+			dictPassengersOnEachFlight[flightID]++
+			//Probs if statement
+		}
+	}
+	//fmt.Println("Current Buffer Array", processorArray) //Prints the lines currently assigned to the processor
+	//
+	//-----fmt.Println(dictPassengersOnEachFlight)
+	textOutput := ""
+	var s string
+	for key, val := range dictPassengersOnEachFlight {
+		// Convert each key/value pair in m to a string
+		s = s + fmt.Sprintf("%s=\"%s", key, val) + "\n"
+	}
+	textOutput = strings.Replace(s, ")", "", -1)
+	textOutput = strings.Replace(textOutput, "=\"%!s(int=", "          ", -1) //Formats text to replace characters with whitespace
+	textOutput = strings.Replace(textOutput, "-", "          ", -1)           //Formats text to replace characters with whitespace
+	outputFile("outputPassengersOnEachFlight", textOutput, 1)                 // Calls output to file function for flights from each airport task
+
 }
