@@ -1,4 +1,4 @@
-package main
+package maindraft
 
 import (
 	"bufio"
@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func main() {
+func mainDraft() {
 
 	noCPUS := runtime.NumCPU() //Calculates Current CPUs
 	fmt.Println("Processors Available: ", noCPUS)
