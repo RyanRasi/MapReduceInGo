@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -136,41 +137,6 @@ func main() {
 	}
 	fmt.Println(dictFlights)
 
-	//Read from top 30 airports
-
-	//Opens file and reads contents
-	file, err = os.Open("./data/real/Top30_airports_LatLong.csv")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer file.Close()
-
-	scanner = bufio.NewScanner(file)
-	airportListCounter := 0
-	for scanner.Scan() {
-		if scanner.Text() == "" {
-			continue
-		}
-		tempSplit := strings.Split(scanner.Text(), ",")
-
-		//baseCounter++
-		//fmt.Println("TempList is: ", tempSplit)
-		for i := 0; i < len(tempSplit); i++ {
-			airportList[airportListCounter][0] = (tempSplit[1] + "    " + tempSplit[0]) // Combines the Code and the Airport in one variable
-			airportList[airportListCounter][i+1] = tempSplit[i]
-		}
-		airportListCounter++
-	}
-
-	//fmt.Println(airportList)
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-	//Closes file
-
 	//Passengers on each flight-------------------------------------
 	dictPassengersonFlight := make(map[string]int)
 	for i := 0; i < len(currentBufferArray); i++ {
@@ -182,19 +148,10 @@ func main() {
 			//Probs if statement
 		}
 	}
-	fmt.Println(dictPassengersonFlight)
+	fmt.Println("Current Buffer Array", currentBufferArray)
+	fmt.Println("Dictionary of Passenger flights", dictPassengersonFlight)
 
-	//Write to txt file, flights from each airport
-
-	flightsFromEachAirport := "\nHello World!"
-
-	file, err = os.Create("outputFlightsFromAirport.txt")
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	file.WriteString("IATA/FAA Code:    " + "Airport:     " + "Flights from each airport:     " + flightsFromEachAirport)
+	//Call airport list open text file
 
 	for i := 0; i < len(airportList); i++ { //Adds all the airports as one to be taken off the count later which will act as the "empty flights"
 		flights := strings.Fields(airportList[i][2])
@@ -217,7 +174,48 @@ func main() {
 	}
 
 	fmt.Println("/////////////////////////////////////////////////////////////")
-	fmt.Println(dictFlights)
+
+	names := make([]string, 0, len(dictFlights))
+	for name := range dictFlights {
+		names = append(names, name)
+	}
+	fmt.Println(names)
+	fmt.Println()
+
+	sort.Slice(names, func(i, j int) bool {
+		return dictFlights[names[i]] > dictFlights[names[j]]
+	})
+	fmt.Println(names)
+	fmt.Println()
+	textOutput := ""
+
+	for _, name := range names {
+		//fmt.Printf("%-7v %v\n", name, dictFlights[name])
+		textOutput = textOutput + name + fmt.Sprintf("%d", dictFlights[name]) + "\n"
+	}
+
+	//fmt.Println(textOutput)
+
+	//fmt.Println(dictFlights)
 	//replacementDictFlights := make(map[string]int)
 
+	//var textOutput string
+	outputFile("outputFlightsFromAirport", textOutput) // Calls output to file function for flights from each airport task
+
+}
+func flightsFromEachAirport(data string) {
+
+}
+func inputFile(fileID string, taskID string) {
+
+}
+func outputFile(fileID string, textOutput string) {
+
+	//Write to txt file, flights from each airport
+	file, err := os.Create(fileID + ".txt")
+	if err != nil {
+		return
+	}
+	defer file.Close()
+	file.WriteString("IATA/FAA Code:    " + "Airport:     " + "        Flights: " + "\n" + textOutput)
 }
