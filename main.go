@@ -11,6 +11,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -114,6 +115,8 @@ func main() {
 	}
 	//Calls passengers on each flight
 	passengersOnEachFlight(processorOneDataArray)
+	//Calls flights from each airport
+	flightsFromEachAirport(processorOneDataArray)
 }
 
 func inputFile(fileID string) {
@@ -146,6 +149,8 @@ func outputFile(fileID string, textOutput string, outputFormat int) {
 		file.WriteString("Passenger Data Entries with Errors Below: " + "\n\n" + textOutput)
 	} else if outputFormat == 1 {
 		file.WriteString("Flight Number:    " + "Depart:      " + "Arrival:     " + "Passengers on Flight: " + "\n" + textOutput)
+	} else if outputFormat == 2 {
+		file.WriteString("IATA/FAA Code:    " + "Airport:     " + "        Flights: " + "\n" + textOutput)
 	}
 }
 func passengersOnEachFlight(processorArray [][]string) {
@@ -174,4 +179,82 @@ func passengersOnEachFlight(processorArray [][]string) {
 	textOutput = strings.Replace(textOutput, "-", "          ", -1)           //Formats text to replace characters with whitespace
 	outputFile("outputPassengersOnEachFlight", textOutput, 1)                 // Calls output to file function for flights from each airport task
 
+}
+func flightsFromEachAirport(processorArray [][]string) {
+	//Flights from each airport - Main part - Counts the number of flights
+	dictFlights := make(map[string]int)
+	for i := 0; i < len(processorArray); i++ {
+
+		flights := strings.Fields(processorArray[i][2])
+
+		for _, flight := range flights {
+			dictFlights[flight]++
+		}
+	}
+	//Call airport list open text file
+	var airportList [30][5]string
+	file, err := os.Open("./data/real/Top30_airports_LatLong.csv") //Opens file
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	airportListCounter := 0 //Sets a counter for each airport
+	for scanner.Scan() {
+		if scanner.Text() == "" { //Handles empty rows
+			continue
+		}
+		tempSplit := strings.Split(scanner.Text(), ",") //Splits data by commas
+		for i := 0; i < len(tempSplit); i++ {
+			if len(tempSplit[0]) < 21 { //If the string is less than 21 characters then a whitespace is added for formatting
+				whiteSpace := 21 - len(tempSplit[0])
+				for i := 0; i < whiteSpace; i++ {
+					tempSplit[0] = tempSplit[0] + " "
+				}
+			}
+			airportList[airportListCounter][0] = (tempSplit[1] + "               " + tempSplit[0]) // Combines the Code and the Airport in one variable
+			airportList[airportListCounter][i+1] = tempSplit[i]                                    // Shifts all the exisiting variables one column up forthe variable above
+		}
+		airportListCounter++
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	//
+	for i := 0; i < len(airportList); i++ { //Adds all the airports as one to be taken off the count later which will act as the "empty flights"
+		flights := strings.Fields(airportList[i][2])
+		for _, flight := range flights {
+			dictFlights[flight]++
+		}
+	}
+
+	replacementDictFlights := make(map[string]int)
+	for k, v := range dictFlights {
+		for i := 0; i < len(airportList); i++ {
+			if strings.Contains(airportList[i][0], k) { //Renames just the airport code to the airport airportName with the code
+				replacementDictFlights[airportList[i][0]] = v
+			}
+		}
+	}
+	dictFlights = replacementDictFlights
+	for k := range dictFlights {
+		dictFlights[k]--
+	}
+
+	fmt.Println("/////////////////////////////////////////////////////////////")
+
+	airports := make([]string, 0, len(dictFlights))
+	for airportName := range dictFlights {
+		airports = append(airports, airportName)
+	}
+	sort.Slice(airports, func(i, j int) bool {
+		return dictFlights[airports[i]] > dictFlights[airports[j]]
+	})
+	textOutput := ""
+
+	for _, airportName := range airports {
+		//fmt.Printf("%-7v %v\n", airportName, dictFlights[airportName])
+		textOutput = textOutput + airportName + fmt.Sprintf("%d", dictFlights[airportName]) + "\n"
+	}
+	outputFile("outputFlightsFromAirport", textOutput, 2) // Calls output to file function for flights from each airport task
 }
