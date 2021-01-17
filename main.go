@@ -202,6 +202,8 @@ func outputFile(fileID string, textOutput string, outputFormat int) {
 		file.WriteString("Flight Number:    " + "Depart:      " + "Arrival:     " + "Passengers on Flight: " + "\n" + textOutput)
 	} else if outputFormat == 2 {
 		file.WriteString("IATA/FAA Code:    " + "Airport:     " + "        Flights: " + "\n" + textOutput)
+	} else if outputFormat == 3 {
+		file.WriteString("Airport:        " + "Depart:    " + "Arrival:   " + "Nautical Miles: " + "\n" + textOutput)
 	}
 }
 func passengersOnEachFlight(processorArray [][]string) {
@@ -315,9 +317,10 @@ func flightAndPassengerMiles(processorArray [][]string, airportDataPath string) 
 	//miles for each flight
 	//total miles of each passenger
 	//passenger with the most miles in order
+	flightMiles := make(map[string]string)
 	flightMileTracker := make([][]string, (len(processorArray))) //Current buffer array is just the current processor
 	for i := range flightMileTracker {
-		flightMileTracker[i] = make([]string, 7) //Array of 6 as that is how many fields there are for the rows
+		flightMileTracker[i] = make([]string, 9) //Array of 6 as that is how many fields there are for the rows
 	}
 	//Sets up allocating array for the processor
 	var airportMetadata [30][4]string
@@ -344,6 +347,9 @@ func flightAndPassengerMiles(processorArray [][]string, airportDataPath string) 
 	//Closes top 30 airports file
 	fmt.Println(processorArray[0])
 	for i := 0; i < len(processorArray); i++ { //Creates a new array with the flight name, abbreviated airport codes and the lat and long for both to and from airports
+		if processorArray[i][2] == "" {
+			continue
+		}
 		flightMileTracker[i][0] = processorArray[i][1]
 		flightMileTracker[i][1] = processorArray[i][2]
 		flightMileTracker[i][2] = processorArray[i][3]
@@ -363,21 +369,40 @@ func flightAndPassengerMiles(processorArray [][]string, airportDataPath string) 
 				//}
 			}
 		}
+		flightMileTracker[i][8] = flightMileTracker[i][0] + "-" + flightMileTracker[i][1] + "-" + flightMileTracker[i][2]
 	}
-	fmt.Println(flightMileTracker[0])
+	//fmt.Println(flightMileTracker)
 	//fmt.Println(strconv.ParseFloat(flightMileTracker[0][3], 64))
 	//var lat1 int64 = 0
 	//if s, err := strconv.ParseFloat(flightMileTracker[0][3], 64); err == nil {
 	//	fmt.Printf("%T, %v\n", s, s)
 	//	lat1 = strconv.ParseInt(s)
 	//}
-	lat1, err := strconv.ParseFloat(flightMileTracker[0][3], 64)
-	lng1, err := strconv.ParseFloat(flightMileTracker[0][4], 64)
-	lat2, err := strconv.ParseFloat(flightMileTracker[0][5], 64)
-	lng2, err := strconv.ParseFloat(flightMileTracker[0][6], 64)
+	fmt.Println(flightMileTracker[0])
+	for i := 0; i < len(flightMileTracker); i++ {
+		lat1, _ := strconv.ParseFloat(flightMileTracker[i][3], 64)
+		lng1, _ := strconv.ParseFloat(flightMileTracker[i][4], 64)
+		lat2, _ := strconv.ParseFloat(flightMileTracker[i][5], 64)
+		lng2, _ := strconv.ParseFloat(flightMileTracker[i][6], 64)
 
-	fmt.Printf("%f Nautical Miles\n", distance(lat1, lng1, lat2, lng2, "N"))
+		nauticalMiles := distance(lat1, lng1, lat2, lng2, "N")
 
+		flightMileTracker[i][7] = fmt.Sprint(nauticalMiles)
+
+		miles := strings.Fields(flightMileTracker[i][8])
+
+		for _, mile := range miles {
+			flightMiles[mile] = flightMileTracker[i][7]
+		}
+
+	}
+	fmt.Println(flightMiles)
+	outputFlightMiles := ""
+	for key, value := range flightMiles {
+		outputFlightMiles = outputFlightMiles + key + "-" + value + "\n"
+	}
+
+	outputFile("outputMilesPerFlight", strings.Replace(outputFlightMiles, "-", "        ", -1), 3) // Calls output to file function for flights from each airport task
 }
 func distance(lat1 float64, lng1 float64, lat2 float64, lng2 float64, unit ...string) float64 {
 	const PI float64 = 3.141592653589793
