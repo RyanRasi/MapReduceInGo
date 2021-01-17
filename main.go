@@ -8,10 +8,12 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -30,26 +32,53 @@ func main() {
 	passengerDataPath := "./data/real/AComp_Passenger_data.csv"
 	re := regexp.MustCompile(`^[a-zA-Z0-9,]*$`)
 	unknownEntries := ""
-	//airportDataPath := "./data/real/Top30_airports_LatLong.csv"
-
-	//Opens main passenger data file
-	file, err := os.Open(passengerDataPath)
+	var airportCode []string
+	airportDataPath := "./data/real/Top30_airports_LatLong.csv"
+	//Opens top 30 airports data file
+	file, err := os.Open(airportDataPath)
 	if err != nil { //If there is an error then log the error
 		log.Fatal(err)
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file) //For every file, increment the base lines variable
 	for scanner.Scan() {
+		if scanner.Text() == "" { //Handles empty rows
+			continue
+		}
+		tempSplit := strings.Split(scanner.Text(), ",") //Splits data by commas
+		airportCode = append(airportCode, tempSplit[1]) //appends the airport code to array
+		if err := scanner.Err(); err != nil {           //Log error if there is one
+			log.Fatal(err)
+		}
+	}
+
+	//Opens main passenger data file
+	file, err = os.Open(passengerDataPath)
+	if err != nil { //If there is an error then log the error
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner = bufio.NewScanner(file) //For every file, increment the base lines variable
+	for scanner.Scan() {
 		if len(scanner.Text()) > 15 { //Error handling - If the text length is a low number then it is not counted in the variable
 			match := re.FindStringSubmatch(scanner.Text()) //REGEX to get rid of symbols and characters that are not a letter or number
 			if len(match) != 0 {
-				baseLines++
+				tempSplit := strings.Split(scanner.Text(), ",")
+				for i := 0; i < len(airportCode); i++ {
+					if airportCode[i] == tempSplit[2] {
+						for j := 0; j < len(airportCode); j++ {
+							if airportCode[j] == tempSplit[3] {
+								baseLines++
+							}
+						}
+					}
+				}
 			}
 		}
 		totalLines++
-	}
-	if err := scanner.Err(); err != nil { //Log error if there is one
-		log.Fatal(err)
+		if err := scanner.Err(); err != nil { //Log error if there is one
+			log.Fatal(err)
+		}
 	}
 	fmt.Println("Total Lines: ", baseLines)
 	//Closes file
@@ -79,13 +108,31 @@ func main() {
 					if len(scanner.Text()) > 15 { //Error handling, if data is smaller than 15 then it is discarded
 						match := re.FindStringSubmatch(scanner.Text()) //REGEX to get rid of symbols and characters that are not a letter or number
 						if len(match) != 0 {
-							processorAllocatedLines[i][j] = strings.ToUpper(scanner.Text())
+							tempSplit := strings.Split(strings.ToUpper(scanner.Text()), ",")
+							for l := 0; l < len(airportCode); l++ {
+								//fmt.Println(airportCode[i])
+								//fmt.Println(tempSplit)
+								if airportCode[l] == tempSplit[2] {
+									firstCodeCorrect := 0
+									for k := 0; k < len(airportCode); k++ {
+										if airportCode[k] == tempSplit[3] {
+											firstCodeCorrect = 1
+											processorAllocatedLines[i][j] = strings.ToUpper(scanner.Text())
+
+										}
+									}
+									if firstCodeCorrect == 0 {
+										unknownEntries = unknownEntries + scanner.Text() + " - Unknown IATA/FAA Code" + "\n"
+										j = j - 1
+									}
+								}
+							}
 						} else {
-							unknownEntries = unknownEntries + scanner.Text() + "\n"
+							unknownEntries = unknownEntries + scanner.Text() + " - Incompatible Symbols in Data Entry" + "\n"
 							j = j - 1
 						}
 					} else {
-						unknownEntries = unknownEntries + scanner.Text() + "\n"
+						unknownEntries = unknownEntries + scanner.Text() + " - Data Entry too Short" + "\n"
 						j = j - 1
 					}
 				}
@@ -98,7 +145,6 @@ func main() {
 		}
 	}
 	outputFile("outputPassengerErrorDataEntries", unknownEntries, 0) // Calls output to file function for passenger data entries with an error
-	//----fmt.Println(processorAllocatedLines)
 
 	//FOR PROCESSOR ONE---------------------------------------------------
 	processorOne := 0
@@ -117,6 +163,11 @@ func main() {
 	passengersOnEachFlight(processorOneDataArray)
 	//Calls flights from each airport
 	flightsFromEachAirport(processorOneDataArray)
+	//Calls
+	//miles for each flight
+	//total miles of each passenger
+	//passenger with the most miles in order
+	flightAndPassengerMiles(processorOneDataArray, airportDataPath)
 }
 
 func inputFile(fileID string) {
@@ -157,14 +208,16 @@ func passengersOnEachFlight(processorArray [][]string) {
 	dictPassengersOnEachFlight := make(map[string]int)
 	for i := 0; i < len(processorArray); i++ {
 		//	processorArray[i][2]
-		//}
-		concatonatePassengerFlights := processorArray[i][1] + "-" + processorArray[i][2] + "-" + processorArray[i][3]
-		passengerFlights := strings.Fields(concatonatePassengerFlights)
-		for _, flightID := range passengerFlights {
-			dictPassengersOnEachFlight[flightID]++
-			//Probs if statement
+		if processorArray[i][2] != "" { //If the string is not empty then...
+			concatonatePassengerFlights := processorArray[i][1] + "-" + processorArray[i][2] + "-" + processorArray[i][3]
+			passengerFlights := strings.Fields(concatonatePassengerFlights)
+			for _, flightID := range passengerFlights {
+				dictPassengersOnEachFlight[flightID]++
+				//Probs if statement
+			}
 		}
 	}
+	//fmt.Println(dictPassengersOnEachFlight)
 	//fmt.Println("Current Buffer Array", processorArray) //Prints the lines currently assigned to the processor
 	//
 	//-----fmt.Println(dictPassengersOnEachFlight)
@@ -182,6 +235,7 @@ func passengersOnEachFlight(processorArray [][]string) {
 }
 func flightsFromEachAirport(processorArray [][]string) {
 	//Flights from each airport - Main part - Counts the number of flights
+	//fmt.Println(processorArray)
 	dictFlights := make(map[string]int)
 	for i := 0; i < len(processorArray); i++ {
 
@@ -190,7 +244,9 @@ func flightsFromEachAirport(processorArray [][]string) {
 		for _, flight := range flights {
 			dictFlights[flight]++
 		}
+
 	}
+
 	//Call airport list open text file
 	var airportList [30][5]string
 	file, err := os.Open("./data/real/Top30_airports_LatLong.csv") //Opens file
@@ -240,9 +296,6 @@ func flightsFromEachAirport(processorArray [][]string) {
 	for k := range dictFlights {
 		dictFlights[k]--
 	}
-
-	fmt.Println("/////////////////////////////////////////////////////////////")
-
 	airports := make([]string, 0, len(dictFlights))
 	for airportName := range dictFlights {
 		airports = append(airports, airportName)
@@ -257,4 +310,101 @@ func flightsFromEachAirport(processorArray [][]string) {
 		textOutput = textOutput + airportName + fmt.Sprintf("%d", dictFlights[airportName]) + "\n"
 	}
 	outputFile("outputFlightsFromAirport", textOutput, 2) // Calls output to file function for flights from each airport task
+}
+func flightAndPassengerMiles(processorArray [][]string, airportDataPath string) {
+	//miles for each flight
+	//total miles of each passenger
+	//passenger with the most miles in order
+	flightMileTracker := make([][]string, (len(processorArray))) //Current buffer array is just the current processor
+	for i := range flightMileTracker {
+		flightMileTracker[i] = make([]string, 7) //Array of 6 as that is how many fields there are for the rows
+	}
+	//Sets up allocating array for the processor
+	var airportMetadata [30][4]string
+	file, err := os.Open(airportDataPath)
+	if err != nil { //If there is an error then log the error
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file) //For every file, increment the base lines variable
+	line := 0
+	for scanner.Scan() {
+		if scanner.Text() == "" { //Handles empty rows
+			continue
+		}
+		tempSplit := strings.Split(scanner.Text(), ",") //Splits data by commas
+		for i := 0; i < len(tempSplit); i++ {
+			airportMetadata[line][i] = tempSplit[i] //appends the airport code to array
+			if err := scanner.Err(); err != nil {   //Log error if there is one
+				log.Fatal(err)
+			}
+		}
+		line++
+	}
+	//Closes top 30 airports file
+	fmt.Println(processorArray[0])
+	for i := 0; i < len(processorArray); i++ { //Creates a new array with the flight name, abbreviated airport codes and the lat and long for both to and from airports
+		flightMileTracker[i][0] = processorArray[i][1]
+		flightMileTracker[i][1] = processorArray[i][2]
+		flightMileTracker[i][2] = processorArray[i][3]
+		//flightMileTracker[i][2] = processorArray[3]
+		//processorArray[i][0] = processorArray[i][1]
+		if processorArray[i][2] != "" {
+			for j := 0; j < len(airportMetadata); j++ {
+				//for j := 0; 0 < len(airportMetadata[i]); j ++ {
+				if strings.Contains(airportMetadata[j][1], flightMileTracker[i][1]) {
+					flightMileTracker[i][3] = airportMetadata[j][2]
+					flightMileTracker[i][4] = airportMetadata[j][3]
+				}
+				if strings.Contains(airportMetadata[j][1], flightMileTracker[i][2]) {
+					flightMileTracker[i][5] = airportMetadata[j][2]
+					flightMileTracker[i][6] = airportMetadata[j][3]
+				}
+				//}
+			}
+		}
+	}
+	fmt.Println(flightMileTracker[0])
+	//fmt.Println(strconv.ParseFloat(flightMileTracker[0][3], 64))
+	//var lat1 int64 = 0
+	//if s, err := strconv.ParseFloat(flightMileTracker[0][3], 64); err == nil {
+	//	fmt.Printf("%T, %v\n", s, s)
+	//	lat1 = strconv.ParseInt(s)
+	//}
+	lat1, err := strconv.ParseFloat(flightMileTracker[0][3], 64)
+	lng1, err := strconv.ParseFloat(flightMileTracker[0][4], 64)
+	lat2, err := strconv.ParseFloat(flightMileTracker[0][5], 64)
+	lng2, err := strconv.ParseFloat(flightMileTracker[0][6], 64)
+
+	fmt.Printf("%f Nautical Miles\n", distance(lat1, lng1, lat2, lng2, "N"))
+
+}
+func distance(lat1 float64, lng1 float64, lat2 float64, lng2 float64, unit ...string) float64 {
+	const PI float64 = 3.141592653589793
+
+	radlat1 := float64(PI * lat1 / 180)
+	radlat2 := float64(PI * lat2 / 180)
+
+	theta := float64(lng1 - lng2)
+	radtheta := float64(PI * theta / 180)
+
+	dist := math.Sin(radlat1)*math.Sin(radlat2) + math.Cos(radlat1)*math.Cos(radlat2)*math.Cos(radtheta)
+
+	if dist > 1 {
+		dist = 1
+	}
+
+	dist = math.Acos(dist)
+	dist = dist * 180 / PI
+	dist = dist * 60 * 1.1515
+
+	if len(unit) > 0 {
+		if unit[0] == "K" {
+			dist = dist * 1.609344
+		} else if unit[0] == "N" {
+			dist = dist * 0.8684
+		}
+	}
+
+	return dist
 }
