@@ -401,6 +401,8 @@ func flightAndPassengerMiles(processorArray [][]string, airportDataPath string) 
 	for key, value := range flightMiles {
 		outputFlightMiles = outputFlightMiles + key + "-" + value + "\n"
 	}
+	//Miles of each passenger
+	//Dictionary of passenger numbers that is cross referenced with the flight miles dictionary and each match is incremented with the value of flight miles
 
 	outputFile("outputMilesPerFlight", strings.Replace(outputFlightMiles, "-", "        ", -1), 3) // Calls output to file function for flights from each airport task
 }
