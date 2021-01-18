@@ -22,7 +22,8 @@ func main() {
 	noCPUS := runtime.NumCPU() //Calculates Current CPUs
 	//Prints Processors Available
 	fmt.Println("Processors Available: ", noCPUS)
-
+	flightMiles := make(map[string]string)
+	dictionaryPasengersonEachFlight := make(map[string]int)
 	//Declares and Initiliases Empty Variables
 	baseLines := 0
 	//additionalLinesNeeded := 0
@@ -145,7 +146,7 @@ func main() {
 		}
 	}
 	outputFile("outputPassengerErrorDataEntries", unknownEntries, 0) // Calls output to file function for passenger data entries with an error
-
+	//fmt.Println(processorAllocatedLines[0])
 	//FOR PROCESSOR ONE---------------------------------------------------
 	processorOne := 0
 	processorOneDataArray := make([][]string, ((baseLines + extraLinesNeeded) / noCPUS)) //Current buffer array is just the current processor
@@ -160,14 +161,18 @@ func main() {
 		}
 	}
 	//Calls passengers on each flight
-	passengersOnEachFlight(processorOneDataArray)
+	for i := 0; i < noCPUS; i++ {
+		passengersOnEachFlight(processorAllocatedLines[i], dictionaryPasengersonEachFlight)
+	}
+	//passengersOnEachFlight(processorAllocatedLines[0], dictionaryPasengersonEachFlight)
+	//passengersOnEachFlight(processorAllocatedLines[1], dictionaryPasengersonEachFlight)
 	//Calls flights from each airport
-	flightsFromEachAirport(processorOneDataArray)
+	//flightsFromEachAirport(processorAllocatedLines[0], )
 	//Calls
 	//miles for each flight
 	//total miles of each passenger
 	//passenger with the most miles in order
-	flightAndPassengerMiles(processorOneDataArray, airportDataPath)
+	flightAndPassengerMiles(processorOneDataArray, airportDataPath, flightMiles)
 }
 
 func inputFile(fileID string) {
@@ -206,12 +211,25 @@ func outputFile(fileID string, textOutput string, outputFormat int) {
 		file.WriteString("Airport:        " + "Depart:    " + "Arrival:   " + "Nautical Miles: " + "\n" + textOutput)
 	}
 }
-func passengersOnEachFlight(processorArray [][]string) {
-	dictPassengersOnEachFlight := make(map[string]int)
-	for i := 0; i < len(processorArray); i++ {
-		//	processorArray[i][2]
-		if processorArray[i][2] != "" { //If the string is not empty then...
-			concatonatePassengerFlights := processorArray[i][1] + "-" + processorArray[i][2] + "-" + processorArray[i][3]
+func passengersOnEachFlight(processorArray []string, dictionaryPasengersonEachFlight map[string]int) {
+	dictPassengersOnEachFlight := dictionaryPasengersonEachFlight
+
+	currentProcessorDataArray := make([][]string, (len(processorArray))) //Current buffer array is just the current processor
+	for i := range currentProcessorDataArray {
+		currentProcessorDataArray[i] = make([]string, 6) //Array of 6 as that is how many fields there are for the rows
+	}
+
+	for i := 0; i < len(currentProcessorDataArray); i++ { //For every 49...
+		tempBufferArray := strings.Split(processorArray[i], ",") //Split the string rows into individual components
+		for j := 0; j < len(tempBufferArray); j++ {              //For the length of the array then...
+			currentProcessorDataArray[i][j] = tempBufferArray[j] //Set the temp array to the current buffer e.g. [49][6]
+		}
+	}
+	// End of string split
+	for i := 0; i < len(currentProcessorDataArray); i++ {
+		//	currentProcessorDataArray[i][2]
+		if currentProcessorDataArray[i][2] != "" { //If the string is not empty then...
+			concatonatePassengerFlights := currentProcessorDataArray[i][1] + "-" + currentProcessorDataArray[i][2] + "-" + currentProcessorDataArray[i][3]
 			passengerFlights := strings.Fields(concatonatePassengerFlights)
 			for _, flightID := range passengerFlights {
 				dictPassengersOnEachFlight[flightID]++
@@ -220,7 +238,7 @@ func passengersOnEachFlight(processorArray [][]string) {
 		}
 	}
 	//fmt.Println(dictPassengersOnEachFlight)
-	//fmt.Println("Current Buffer Array", processorArray) //Prints the lines currently assigned to the processor
+	//fmt.Println("Current Buffer Array", currentProcessorDataArray) //Prints the lines currently assigned to the processor
 	//
 	//-----fmt.Println(dictPassengersOnEachFlight)
 	textOutput := ""
@@ -313,11 +331,12 @@ func flightsFromEachAirport(processorArray [][]string) {
 	}
 	outputFile("outputFlightsFromAirport", textOutput, 2) // Calls output to file function for flights from each airport task
 }
-func flightAndPassengerMiles(processorArray [][]string, airportDataPath string) {
+func flightAndPassengerMiles(processorArray [][]string, airportDataPath string, flightMilesInput map[string]string) {
 	//miles for each flight
 	//total miles of each passenger
 	//passenger with the most miles in order
-	flightMiles := make(map[string]string)
+	//flightMiles := make(map[string]string)
+	flightMiles := flightMilesInput
 	flightMileTracker := make([][]string, (len(processorArray))) //Current buffer array is just the current processor
 	for i := range flightMileTracker {
 		flightMileTracker[i] = make([]string, 9) //Array of 6 as that is how many fields there are for the rows
@@ -345,7 +364,7 @@ func flightAndPassengerMiles(processorArray [][]string, airportDataPath string) 
 		line++
 	}
 	//Closes top 30 airports file
-	fmt.Println(processorArray[0])
+	//fmt.Println(processorArray[0])
 	for i := 0; i < len(processorArray); i++ { //Creates a new array with the flight name, abbreviated airport codes and the lat and long for both to and from airports
 		if processorArray[i][2] == "" {
 			continue
@@ -378,7 +397,7 @@ func flightAndPassengerMiles(processorArray [][]string, airportDataPath string) 
 	//	fmt.Printf("%T, %v\n", s, s)
 	//	lat1 = strconv.ParseInt(s)
 	//}
-	fmt.Println(flightMileTracker[0])
+	//fmt.Println(flightMileTracker[0])
 	for i := 0; i < len(flightMileTracker); i++ {
 		lat1, _ := strconv.ParseFloat(flightMileTracker[i][3], 64)
 		lng1, _ := strconv.ParseFloat(flightMileTracker[i][4], 64)
@@ -396,7 +415,7 @@ func flightAndPassengerMiles(processorArray [][]string, airportDataPath string) 
 		}
 
 	}
-	fmt.Println(flightMiles)
+	//fmt.Println(flightMiles)
 	outputFlightMiles := ""
 	for key, value := range flightMiles {
 		outputFlightMiles = outputFlightMiles + key + "-" + value + "\n"
