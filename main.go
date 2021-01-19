@@ -151,8 +151,9 @@ func main() {
 	for i := 0; i < numberofCPUs; i++ {
 		go mapper(processorAllocatedLines[i], airportData, task1Channel, task2Channel)
 		passengersOnEachFlightMapArray[i] = <-task1Channel
+		flightsFromEachAirportMapArray[i] = <-task2Channel
 		//SENDS THE DATA TO THE REDUCER
-		reducer(passengersOnEachFlightMapArray, numberofCPUs)
+		reducer(passengersOnEachFlightMapArray, flightsFromEachAirportMapArray, numberofCPUs)
 	}
 }
 
