@@ -1,31 +1,31 @@
 IATA/FAA Code:    Airport:             Flights: 
-DEN               DENVER               8
-ORD               CHICAGO              8
-KUL               KUALA LUMPUR         5
-JFK               NEW YORK             4
-CDG               PARIS                4
-LHR               LONDON               4
-CAN               GUANGZHOU            3
-MUC               MUNICH               3
-CGK               JAKARTA              3
-PVG               SHANGHAI             3
-LAS               LAS VEGAS            2
-DFW               DALLAS/FORT WORTH    2
-MAD               MADRID               2
-IAH               HOUSTON              2
-MIA               MIAMI                2
-CLT               CHARLOTTE            2
-ATL               ATLANTA              1
-FCO               ROME                 1
-AMS               AMSTERDAM            1
-SIN               SINGAPORE            0
-LAX               LOS ANGELES          0
-PHX               PHOENIX              0
-PEK               BEIJING              0
-HND               TOKYO                0
-SFO               SAN FRANCISCO        0
-HKG               HONG KONG            0
-BKK               BANGKOK              0
-DXB               DUBAI                0
-IST               ISTANBUL             0
+DEN               DENVER               45
+IAH               HOUSTON              36
+CAN               GUANGZHOU            35
+ATL               ATLANTA              35
+ORD               CHICAGO              32
+KUL               KUALA LUMPUR         32
+CGK               JAKARTA              26
+LHR               LONDON               24
+JFK               NEW YORK             23
+PVG               SHANGHAI             20
+CLT               CHARLOTTE            20
+CDG               PARIS                19
+BKK               BANGKOK              16
+LAS               LAS VEGAS            15
+FCO               ROME                 15
+HND               TOKYO                13
+MUC               MUNICH               13
+AMS               AMSTERDAM            13
+MAD               MADRID               12
+PEK               BEIJING              11
+MIA               MIAMI                11
+DFW               DALLAS/FORT WORTH    10
 FRA               FRANKFURT            0
+LAX               LOS ANGELES          0
+SFO               SAN FRANCISCO        0
+PHX               PHOENIX              0
+IST               ISTANBUL             0
+DXB               DUBAI                0
+HKG               HONG KONG            0
+SIN               SINGAPORE            0
