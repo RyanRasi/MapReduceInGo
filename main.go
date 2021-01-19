@@ -12,21 +12,12 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"time"
 )
 
 func main() {
 	numberofCPUs := runtime.NumCPU() //Calculates Current CPUs
-	//Prints Processors Available
-
-	processorOutputOne := make(map[string]int)
-	processorOutputTwo := make(map[string]int)
-	processorOutputThr := make(map[string]int)
-	processorOutputFou := make(map[string]int)
-	processorOutputFiv := make(map[string]int)
-	processorOutputSix := make(map[string]int)
-	processorOutputSev := make(map[string]int)
-	processorOutputEig := make(map[string]int)
+	passengersOnEachFlightMapArray := make(map[int]map[string]int)
+	flightsFromEachAirportMapArray := make(map[int]map[string]int)
 
 	fmt.Println("Processors Available: ", numberofCPUs)
 	baseLines := 0
@@ -149,92 +140,22 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	file, err = os.Create("./output/" + "test1" + ".txt")
-	if err != nil {
-		return
-	}
-	defer file.Close()
-	testString := ""
-	for i := 0; i < len(processorAllocatedLines[2]); i++ {
-		testString = testString + processorAllocatedLines[2][i][0] + "," + processorAllocatedLines[2][i][1] + "," + processorAllocatedLines[2][i][2] + "," + processorAllocatedLines[2][i][3] + "," + processorAllocatedLines[2][i][4] + "," + processorAllocatedLines[2][i][5] + "\n"
-	}
-	file.WriteString("Entry 0 below: " + "\n\n" + testString)
+	//Closes File
 
-	//Closes file
-	//fmt.Println(processorAllocatedLines[0][0][1])
-	//fmt.Println(processorAllocatedLines[0])
 	outputData(unknownData, "unknownDataEntries", 0)
-	//Processor One
-	//counter := make(map[string]int)
-	//c2 := make(chan string)
-	//c3 := make(chan string)
-	//c4 := make(chan string)
-	//c5 := make(chan string)
-	//c6 := make(chan string)
-	//c7 := make(chan string)
-	//c8 := make(chan string)
-	switch numberofCPUs {
-	case 0:
-		fmt.Println("Insuffiencient number of processors - Program exiting")
-		break
-	case 1:
-		go mapper(processorAllocatedLines[0], airportData, processorOutputOne)
-	case 2:
-		go mapper(processorAllocatedLines[0], airportData, processorOutputOne)
-		go mapper(processorAllocatedLines[1], airportData, processorOutputTwo)
-	case 3:
-		go mapper(processorAllocatedLines[0], airportData, processorOutputOne)
-		go mapper(processorAllocatedLines[1], airportData, processorOutputTwo)
-		go mapper(processorAllocatedLines[2], airportData, processorOutputThr)
-	case 4:
-		go mapper(processorAllocatedLines[0], airportData, processorOutputOne)
-		go mapper(processorAllocatedLines[1], airportData, processorOutputTwo)
-		go mapper(processorAllocatedLines[2], airportData, processorOutputThr)
-		go mapper(processorAllocatedLines[3], airportData, processorOutputFou)
-	case 5:
-		go mapper(processorAllocatedLines[0], airportData, processorOutputOne)
-		go mapper(processorAllocatedLines[1], airportData, processorOutputTwo)
-		go mapper(processorAllocatedLines[2], airportData, processorOutputThr)
-		go mapper(processorAllocatedLines[3], airportData, processorOutputFou)
-		go mapper(processorAllocatedLines[4], airportData, processorOutputFiv)
-	case 6:
-		go mapper(processorAllocatedLines[0], airportData, processorOutputOne)
-		go mapper(processorAllocatedLines[1], airportData, processorOutputTwo)
-		go mapper(processorAllocatedLines[2], airportData, processorOutputThr)
-		go mapper(processorAllocatedLines[3], airportData, processorOutputFou)
-		go mapper(processorAllocatedLines[4], airportData, processorOutputFiv)
-		go mapper(processorAllocatedLines[5], airportData, processorOutputSix)
-	case 7:
-		go mapper(processorAllocatedLines[0], airportData, processorOutputOne)
-		go mapper(processorAllocatedLines[1], airportData, processorOutputTwo)
-		go mapper(processorAllocatedLines[2], airportData, processorOutputThr)
-		go mapper(processorAllocatedLines[3], airportData, processorOutputFou)
-		go mapper(processorAllocatedLines[4], airportData, processorOutputFiv)
-		go mapper(processorAllocatedLines[5], airportData, processorOutputSix)
-		go mapper(processorAllocatedLines[6], airportData, processorOutputSev)
-	case 8:
-		go mapper(processorAllocatedLines[0], airportData, processorOutputOne)
-		go mapper(processorAllocatedLines[1], airportData, processorOutputTwo)
-		go mapper(processorAllocatedLines[2], airportData, processorOutputThr)
-		go mapper(processorAllocatedLines[3], airportData, processorOutputFou)
-		go mapper(processorAllocatedLines[4], airportData, processorOutputFiv)
-		go mapper(processorAllocatedLines[5], airportData, processorOutputSix)
-		go mapper(processorAllocatedLines[6], airportData, processorOutputSev)
-		go mapper(processorAllocatedLines[7], airportData, processorOutputEig)
-		time.Sleep(1 * time.Second)
-		reducer(processorOutputOne, processorOutputTwo, processorOutputThr, processorOutputFou, processorOutputFiv, processorOutputSix, processorOutputSev, processorOutputEig)
-	}
 
-	//fmt.Println(counter)
-	//testString := "TEST"
-	//go shuffleInput := printlineGoTest(testString)
-	//time.Sleep(1 * time.Second)
-	//fmt.Println(processorOutputOne)
+	task1Channel := make(chan map[string]int) //Passengers on each flight
+	task2Channel := make(chan map[string]int) //Flights from each airport
+
+	// SENDS DATA TO THE MAPPER
+	for i := 0; i < numberofCPUs; i++ {
+		go mapper(processorAllocatedLines[i], airportData, task1Channel, task2Channel)
+		passengersOnEachFlightMapArray[i] = <-task1Channel
+		//SENDS THE DATA TO THE REDUCER
+		reducer(passengersOnEachFlightMapArray, numberofCPUs)
+	}
 }
 
-//func printlineGoTest(text string) {
-//	fmt.Println(text)
-//}
 func checkLinesPerProcessor(lines int, cpus int) int {
 	//To make sure that there are enough lines for each processor then this block is ran...
 	additionalLines := lines
