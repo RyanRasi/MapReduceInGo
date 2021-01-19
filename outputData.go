@@ -16,6 +16,6 @@ func outputData(outputText string, fileID string, outputID int) {
 	if outputID == 0 {
 		file.WriteString("Passenger Data Entries with Errors Below: " + "\n\n" + outputText)
 	} else if outputID == 1 {
-		file.WriteString("Flight Number:  Depart:  Arrival:   Number of Passengers: \n" + outputText)
+		file.WriteString("Flight Number:  Depart:    Arrival:   Number of Passengers: \n" + outputText)
 	}
 }
