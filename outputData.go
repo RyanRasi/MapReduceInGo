@@ -17,5 +17,7 @@ func outputData(outputText string, fileID string, outputID int) {
 		file.WriteString("Passenger Data Entries with Errors Below: " + "\n\n" + outputText)
 	} else if outputID == 1 {
 		file.WriteString("Flight Number:  Depart:    Arrival:   Number of Passengers: \n" + outputText)
+	} else if outputID == 2 {
+		file.WriteString("IATA/FAA Code:    Airport:             Flights: \n" + outputText)
 	}
 }
