@@ -4,20 +4,22 @@
 
 package main
 
-func mapper(processorInput [][]string, airportData [30][4]string, counter map[string]int) {
-	//Passengers on Each Flight
-	//counter := make(map[string]int)
-	//var data [len(processorInput)]string
-	data := make([]string, len(processorInput))
+func mapper(processorInput [][]string, airportData [30][4]string, task1Channel chan map[string]int, task2Channel chan map[string]int) {
+	//PASSENGERS ON EACH FLIGHT
+	counter := make(map[string]int)             //Counter map which keeps track of the flights
+	data := make([]string, len(processorInput)) //Makes an array for however big the data is
 	for i := 0; i < len(processorInput); i++ {
-		data[i] = processorInput[i][1] + "-" + processorInput[i][2] + "-" + processorInput[i][3]
+		data[i] = processorInput[i][1] + "-" + processorInput[i][2] + "-" + processorInput[i][3] //Concatonates the flight ID and departure and arrival airports
 	}
-	//dataArray := strings.Split(data, ",")
-	for i := 0; i < len(data); i++ {
-		if data[i] == "" {
+	for i := 0; i < len(data); i++ { //For however long the data is...
+		if data[i] == "" { //If there is no data, then skip
 			break
 		}
-		counter[data[i]]++
+		counter[data[i]]++ //Increment the occurances of each flight
 	}
-	//c1 <- "counter"
+	//return counter
+	task1Channel <- counter //Return the result to the main function so that the reducer can be called
+
+	//NUMBER OF FLIGHTS FROM EACH AIRPORT
+
 }
