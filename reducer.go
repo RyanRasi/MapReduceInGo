@@ -26,7 +26,7 @@ func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairpo
 			outputArray = outputArray + strings.Replace(key, "-", "        ", -1) + "        " + fmt.Sprint(value) + "\n"
 		}
 	}
-	outputData(outputArray, "passengersoneachflight", 1, "NONE")
+	outputData(outputArray, "PassengersOnEachFlight", 1, "NONE")
 
 	//FLIGHTS FROM EACH AIRPORT
 	dictFlightsFromEachAirport := make(map[string]int)
@@ -59,7 +59,7 @@ func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairpo
 			outputArray = outputArray + strings.Replace(value, "-", "               ", -1) + "        " + whitespace + fmt.Sprint(dictFlightsFromEachAirport[value]-8) + "\n"
 		}
 	}
-	outputData(outputArray, "flightsfromeachairport", 2, "NONE")
+	outputData(outputArray, "FlightsFromEachAirport", 2, "NONE")
 
 	//NAUTICAL MILES AND PASSENGER WITH THE MOST MILES
 
@@ -105,7 +105,7 @@ func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairpo
 	}
 	//fmt.Println(dictTotalNauticalMilesPerPassenger)
 
-	outputData(outputArrayFlights, "totalnauticalmiles", 3, outputArrayPassengers)
+	outputData(outputArrayFlights, "TotalNauticalMilesPerFlightAndPassenger", 3, outputArrayPassengers)
 
 	//FLIGHTS BASED ON THEIR ID NUMBER
 	dictFlightsBasedOnID := make(map[string]string)
@@ -124,5 +124,5 @@ func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairpo
 		}
 	}
 	//fmt.Println(outputArray)
-	outputData(outputArray, "flightsBasedOnID", 4, "NONE")
+	outputData(outputArray, "FlightsBasedOnID", 4, "NONE")
 }
