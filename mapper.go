@@ -162,8 +162,9 @@ func mapper(processorInput [][]string, airportData [30][4]string, task1Channel c
 			tempArray[3] = arrivalTimeSplit[1] // Unix Epoch conversion to proper format
 
 			flightTime := strings.Split(time.Unix(flightTimeInput, 0).String(), " ")
+
 			hoursMinutesSeconds := strings.Split(flightTime[1], ":")
-			tempArray[4] = ("Hours: " + hoursMinutesSeconds[0] + " - Minutes: " + hoursMinutesSeconds[1] + " - Seconds: " + hoursMinutesSeconds[2])
+			tempArray[4] = ("Hours: " + hoursMinutesSeconds[1] + " - Minutes: " + hoursMinutesSeconds[2])
 			flightEntry := tempArray[0] + "|" + tempArray[1] + "|" + tempArray[2] + "|" + tempArray[3] + "|" + tempArray[4]
 
 			flightsBasedOnID[flightEntry] = flightsBasedOnID[flightEntry] + "-" + processorInput[i][0] //Splits passenger ID entries
