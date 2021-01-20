@@ -21,5 +21,7 @@ func outputData(outputText string, fileID string, outputID int, optional string)
 		file.WriteString("IATA/FAA Code:    Airport:                 Flights: \n" + outputText)
 	} else if outputID == 3 {
 		file.WriteString("Flight Number:  " + "Depart:    " + "Arrival:   " + "Nautical Miles: " + "\n" + outputText + "\n" + "Passengers sorted by miles accrued: \n\n" + "Passenger Number:         Total Miles Flown:\n" + optional)
+	} else if outputID == 4 {
+		file.WriteString("Flight ID:      IATA/FAA Code: Departure Time: Arrival Time:   Flight Time:                            PassengerID:  \n" + outputText)
 	}
 }
