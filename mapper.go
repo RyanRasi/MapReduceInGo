@@ -9,9 +9,10 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
-func mapper(processorInput [][]string, airportData [30][4]string, task1Channel chan map[string]int, task2Channel chan map[string]int, task3aChannel chan map[string]string, task3bChannel chan map[string]float64) {
+func mapper(processorInput [][]string, airportData [30][4]string, task1Channel chan map[string]int, task2Channel chan map[string]int, task3aChannel chan map[string]string, task3bChannel chan map[string]float64, task4Channel chan map[string]string) {
 	//PASSENGERS ON EACH FLIGHT
 	counterPassengersonEachFlight := make(map[string]int) //Counter map which keeps track of the passenegrs on each flight
 	data := make([]string, len(processorInput))           //Makes an array for however big the data is
@@ -133,6 +134,44 @@ func mapper(processorInput [][]string, airportData [30][4]string, task1Channel c
 
 	task3aChannel <- flightMiles //Return the result to the main function so that the reducer can be called
 	task3bChannel <- passengerMileTracker
+
+	// LIST OF FLIGHTS BASED ON FLIGHT ID
+	flightsBasedOnID := make(map[string]string)
+
+	for i := 0; i < len(processorInput); i++ {
+		var tempArray [6]string
+		if processorInput[i][4] == "" {
+		} else {
+			tempArray[0] = processorInput[i][1]                              //Sets the FlightID
+			tempArray[1] = processorInput[i][2] + "-" + processorInput[i][3] // Sets the IATA/FAA Code
+
+			departureTime, err := strconv.ParseInt(processorInput[i][4], 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			departureTimeSplit := strings.Split(time.Unix(departureTime, 0).String(), " ")
+			tempArray[2] = departureTimeSplit[1] // Unix Epoch conversion to proper format
+			//
+			//flightTimeInput, err := strconv.ParseInt(processorInput[i][4], 10, 64)
+			flightTimeInput, err := strconv.ParseInt(processorInput[i][5], 10, 64)
+			arrivalTime := departureTime + (flightTimeInput * 60)
+			if err != nil {
+				panic(err)
+			}
+			arrivalTimeSplit := strings.Split(time.Unix(arrivalTime, 0).String(), " ")
+			tempArray[3] = arrivalTimeSplit[1] // Unix Epoch conversion to proper format
+
+			flightTime := strings.Split(time.Unix(flightTimeInput, 0).String(), " ")
+			hoursMinutesSeconds := strings.Split(flightTime[1], ":")
+			tempArray[4] = ("Hours: " + hoursMinutesSeconds[0] + " - Minutes: " + hoursMinutesSeconds[1] + " - Seconds: " + hoursMinutesSeconds[2])
+			flightEntry := tempArray[0] + "|" + tempArray[1] + "|" + tempArray[2] + "|" + tempArray[3] + "|" + tempArray[4]
+
+			flightsBasedOnID[flightEntry] = flightsBasedOnID[flightEntry] + "-" + processorInput[i][0] //Splits passenger ID entries
+
+		}
+	}
+	//fmt.Println(flightsBasedOnID)
+	task4Channel <- flightsBasedOnID
 }
 func distance(lat1 float64, lng1 float64, lat2 float64, lng2 float64, unit ...string) float64 {
 	const PI float64 = 3.141592653589793
