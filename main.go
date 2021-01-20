@@ -18,7 +18,8 @@ func main() {
 	numberofCPUs := runtime.NumCPU() //Calculates Current CPUs
 	passengersOnEachFlightMapArray := make(map[int]map[string]int)
 	flightsFromEachAirportMapArray := make(map[int]map[string]int)
-	totalNauticalMilesArray := make(map[int]map[string]string)
+	totalNauticalMilesPerFlightArray := make(map[int]map[string]string)
+	totalNauticalMilesPerPassengerArray := make(map[int]map[string]float64)
 
 	fmt.Println("Processors Available: ", numberofCPUs)
 	baseLines := 0
@@ -143,21 +144,23 @@ func main() {
 	}
 	//Closes File
 
-	outputData(unknownData, "unknownDataEntries", 0)
+	outputData(unknownData, "unknownDataEntries", 0, "NONE")
 
-	task1Channel := make(chan map[string]int)    //Passengers on each flight
-	task2Channel := make(chan map[string]int)    //Flights from each airport
-	task3Channel := make(chan map[string]string) //Total Nautical Miles
+	task1Channel := make(chan map[string]int)      //Passengers on each flight
+	task2Channel := make(chan map[string]int)      //Flights from each airport
+	task3aChannel := make(chan map[string]string)  //Total Nautical Miles - Per Flight
+	task3bChannel := make(chan map[string]float64) //Total Nautical Miles - Per Passenger
 
 	// SENDS DATA TO THE MAPPER
 	for i := 0; i < numberofCPUs; i++ {
-		go mapper(processorAllocatedLines[i], airportData, task1Channel, task2Channel, task3Channel)
+		go mapper(processorAllocatedLines[i], airportData, task1Channel, task2Channel, task3aChannel, task3bChannel)
 		passengersOnEachFlightMapArray[i] = <-task1Channel
 		flightsFromEachAirportMapArray[i] = <-task2Channel
-		totalNauticalMilesArray[i] = <-task3Channel
+		totalNauticalMilesPerFlightArray[i] = <-task3aChannel
+		totalNauticalMilesPerPassengerArray[i] = <-task3bChannel
 		//SENDS THE DATA TO THE REDUCER
 	}
-	reducer(passengersOnEachFlightMapArray, flightsFromEachAirportMapArray, totalNauticalMilesArray, numberofCPUs)
+	reducer(passengersOnEachFlightMapArray, flightsFromEachAirportMapArray, totalNauticalMilesPerFlightArray, totalNauticalMilesPerPassengerArray, numberofCPUs)
 }
 
 func checkLinesPerProcessor(lines int, cpus int) int {

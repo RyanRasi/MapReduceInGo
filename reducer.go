@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairport map[int]map[string]int, totalNauticalMiles map[int]map[string]string, numberOfCPUs int) {
+func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairport map[int]map[string]int, totalNauticalMilesPerFlight map[int]map[string]string, totalNauticalMilesPerPassenger map[int]map[string]float64, numberOfCPUs int) {
 
 	//PASSENGERS ON EACH FLIGHT
 	dictPassengersOnEachFlight := make(map[string]int)
@@ -26,7 +26,7 @@ func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairpo
 			outputArray = outputArray + strings.Replace(key, "-", "        ", -1) + "        " + fmt.Sprint(value) + "\n"
 		}
 	}
-	outputData(outputArray, "passengersoneachflight", 1)
+	outputData(outputArray, "passengersoneachflight", 1, "NONE")
 
 	//FLIGHTS FROM EACH AIRPORT
 	dictFlightsFromEachAirport := make(map[string]int)
@@ -59,24 +59,51 @@ func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairpo
 			outputArray = outputArray + strings.Replace(value, "-", "               ", -1) + "        " + whitespace + fmt.Sprint(dictFlightsFromEachAirport[value]-8) + "\n"
 		}
 	}
-	outputData(outputArray, "flightsfromeachairport", 2)
+	outputData(outputArray, "flightsfromeachairport", 2, "NONE")
 
 	//NAUTICAL MILES AND PASSENGER WITH THE MOST MILES
-	dictTotalNauticalMiles := make(map[string]string)
-	//fmt.Println(totalNauticalMiles)
+
+	dictTotalNauticalMilesPerFlight := make(map[string]string)
+	dictTotalNauticalMilesPerPassenger := make(map[string]float64)
+	//fmt.Println(totalNauticalMilesPerFlight)
 	for i := 0; i < numberOfCPUs; i++ {
-		for key, value := range totalNauticalMiles[i] {
-			dictTotalNauticalMiles[key] = value
+		for key, value := range totalNauticalMilesPerFlight[i] {
+			dictTotalNauticalMilesPerFlight[key] = value
 		}
 	}
-	fmt.Println(dictTotalNauticalMiles)
+	for i := 0; i < numberOfCPUs; i++ {
+		for key, value := range totalNauticalMilesPerPassenger[i] {
+			dictTotalNauticalMilesPerPassenger[key] = dictTotalNauticalMilesPerPassenger[key] + value
+		}
+	}
+	//fmt.Println(dictTotalNauticalMilesPerPassenger)
 
-	outputArray = ""
-	for key, value := range dictTotalNauticalMiles {
+	outputArrayFlights := ""
+	for key, value := range dictTotalNauticalMilesPerFlight {
 		if key == "--" {
 		} else {
-			outputArray = outputArray + strings.Replace(key, "-", "        ", -1) + "        " + fmt.Sprint(value) + "\n"
+			outputArrayFlights = outputArrayFlights + strings.Replace(key, "-", "        ", -1) + "        " + fmt.Sprint(value) + "\n"
 		}
 	}
-	outputData(outputArray, "totalnauticalmiles", 3)
+	//SORT FUNCTION
+	sortedDictTotalNauticalMilesPerPassenger := make([]string, 0, len(dictTotalNauticalMilesPerPassenger))
+	for name := range dictTotalNauticalMilesPerPassenger {
+		sortedDictTotalNauticalMilesPerPassenger = append(sortedDictTotalNauticalMilesPerPassenger, name)
+	}
+
+	sort.Slice(sortedDictTotalNauticalMilesPerPassenger, func(i, j int) bool {
+		return dictTotalNauticalMilesPerPassenger[sortedDictTotalNauticalMilesPerPassenger[i]] > dictTotalNauticalMilesPerPassenger[sortedDictTotalNauticalMilesPerPassenger[j]]
+	})
+	//SORT FUNCTION END
+
+	outputArrayPassengers := ""
+	for _, value := range sortedDictTotalNauticalMilesPerPassenger {
+		if value == "--" {
+		} else {
+			outputArrayPassengers = outputArrayPassengers + value + "                " + fmt.Sprint(dictTotalNauticalMilesPerPassenger[value]) + "\n"
+		}
+	}
+	//fmt.Println(dictTotalNauticalMilesPerPassenger)
+
+	outputData(outputArrayFlights, "totalnauticalmiles", 3, outputArrayPassengers)
 }

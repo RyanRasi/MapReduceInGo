@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func mapper(processorInput [][]string, airportData [30][4]string, task1Channel chan map[string]int, task2Channel chan map[string]int, task3Channel chan map[string]string) {
+func mapper(processorInput [][]string, airportData [30][4]string, task1Channel chan map[string]int, task2Channel chan map[string]int, task3aChannel chan map[string]string, task3bChannel chan map[string]float64) {
 	//PASSENGERS ON EACH FLIGHT
 	counterPassengersonEachFlight := make(map[string]int) //Counter map which keeps track of the passenegrs on each flight
 	data := make([]string, len(processorInput))           //Makes an array for however big the data is
@@ -56,6 +56,8 @@ func mapper(processorInput [][]string, airportData [30][4]string, task1Channel c
 
 	flightMiles := make(map[string]string)
 	flightMileTracker := make([][]string, (len(processorInput))) //Current buffer array is just the current processor
+	//passengerMiles := make(map[string]string)
+	passengerMileTracker := make(map[string]float64)
 	for i := range flightMileTracker {
 		flightMileTracker[i] = make([]string, 9) //Array of 6 as that is how many fields there are for the rows
 	}
@@ -98,10 +100,39 @@ func mapper(processorInput [][]string, airportData [30][4]string, task1Channel c
 		for _, mile := range miles {
 			flightMiles[mile] = flightMileTracker[i][7]
 		}
+	}
+
+	//PASSENGER MILEAGE CALCULATOR
+	passengerIDFlightsAndMiles := make([]string, len(processorInput))
+
+	for i := 0; i < len(processorInput); i++ {
+		for key, value := range flightMiles {
+			//fmt.Println(processorInput[i][0])
+			tempSplit := strings.Split(key, "-")
+			if tempSplit[0] == processorInput[i][1] {
+				passengerIDFlightsAndMiles[i] = (processorInput[i][0] + "-" + value)
+			}
+		}
+	}
+	for i := 0; i < len(passengerIDFlightsAndMiles); i++ {
+		//fmt.Println(passengerIDFlightsAndMiles[i])
+	}
+	//fmt.Println(passengerIDFlightsAndMiles)
+	for i := 0; i < len(passengerIDFlightsAndMiles); i++ {
+		tempSplit := strings.Split(passengerIDFlightsAndMiles[i], "-")
+		if tempSplit[0] == "" { //If there is no data, then skip
+			break
+		} else {
+			//fmt.Println(tempSplit[1])
+			tempFloat, _ := strconv.ParseFloat(tempSplit[1], 64)
+			passengerMileTracker[tempSplit[0]] = passengerMileTracker[tempSplit[0]] + tempFloat //Increment the occurances of each flight
+		}
 
 	}
-	//fmt.Println(flightMiles)
-	task3Channel <- flightMiles //Return the result to the main function so that the reducer can be called
+	//	fmt.Println(passengerMileTracker)
+
+	task3aChannel <- flightMiles //Return the result to the main function so that the reducer can be called
+	task3bChannel <- passengerMileTracker
 }
 func distance(lat1 float64, lng1 float64, lat2 float64, lng2 float64, unit ...string) float64 {
 	const PI float64 = 3.141592653589793
