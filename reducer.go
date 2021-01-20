@@ -6,10 +6,11 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
-func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairport map[int]map[string]int, numberOfCPUs int) {
+func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairport map[int]map[string]int, totalNauticalMiles map[int]map[string]string, numberOfCPUs int) {
 
 	//PASSENGERS ON EACH FLIGHT
 	dictPassengersOnEachFlight := make(map[string]int)
@@ -34,12 +35,48 @@ func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairpo
 			dictFlightsFromEachAirport[key] = dictFlightsFromEachAirport[key] + value
 		}
 	}
+
 	outputArray = ""
-	for key, value := range dictFlightsFromEachAirport {
+
+	sortedDictFlightsFromEachAirport := make([]string, 0, len(dictFlightsFromEachAirport))
+	for name := range dictFlightsFromEachAirport {
+		sortedDictFlightsFromEachAirport = append(sortedDictFlightsFromEachAirport, name)
+	}
+
+	sort.Slice(sortedDictFlightsFromEachAirport, func(i, j int) bool {
+		return dictFlightsFromEachAirport[sortedDictFlightsFromEachAirport[i]] > dictFlightsFromEachAirport[sortedDictFlightsFromEachAirport[j]]
+	})
+
+	for _, value := range sortedDictFlightsFromEachAirport {
+		//fmt.Printf("%-7v %v\n", value, dictFlightsFromEachAirport[value])
+		if value == "--" {
+		} else {
+			whitespace := ""
+
+			for i := 0; i < 21-len(value); i++ {
+				whitespace = whitespace + " "
+			}
+			outputArray = outputArray + strings.Replace(value, "-", "               ", -1) + "        " + whitespace + fmt.Sprint(dictFlightsFromEachAirport[value]-8) + "\n"
+		}
+	}
+	outputData(outputArray, "flightsfromeachairport", 2)
+
+	//NAUTICAL MILES AND PASSENGER WITH THE MOST MILES
+	dictTotalNauticalMiles := make(map[string]string)
+	//fmt.Println(totalNauticalMiles)
+	for i := 0; i < numberOfCPUs; i++ {
+		for key, value := range totalNauticalMiles[i] {
+			dictTotalNauticalMiles[key] = value
+		}
+	}
+	fmt.Println(dictTotalNauticalMiles)
+
+	outputArray = ""
+	for key, value := range dictTotalNauticalMiles {
 		if key == "--" {
 		} else {
 			outputArray = outputArray + strings.Replace(key, "-", "        ", -1) + "        " + fmt.Sprint(value) + "\n"
 		}
 	}
-	outputData(outputArray, "flightsfromeachairport", 2)
+	outputData(outputArray, "totalnauticalmiles", 3)
 }

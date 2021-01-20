@@ -18,6 +18,7 @@ func main() {
 	numberofCPUs := runtime.NumCPU() //Calculates Current CPUs
 	passengersOnEachFlightMapArray := make(map[int]map[string]int)
 	flightsFromEachAirportMapArray := make(map[int]map[string]int)
+	totalNauticalMilesArray := make(map[int]map[string]string)
 
 	fmt.Println("Processors Available: ", numberofCPUs)
 	baseLines := 0
@@ -144,17 +145,19 @@ func main() {
 
 	outputData(unknownData, "unknownDataEntries", 0)
 
-	task1Channel := make(chan map[string]int) //Passengers on each flight
-	task2Channel := make(chan map[string]int) //Flights from each airport
+	task1Channel := make(chan map[string]int)    //Passengers on each flight
+	task2Channel := make(chan map[string]int)    //Flights from each airport
+	task3Channel := make(chan map[string]string) //Total Nautical Miles
 
 	// SENDS DATA TO THE MAPPER
 	for i := 0; i < numberofCPUs; i++ {
-		go mapper(processorAllocatedLines[i], airportData, task1Channel, task2Channel)
+		go mapper(processorAllocatedLines[i], airportData, task1Channel, task2Channel, task3Channel)
 		passengersOnEachFlightMapArray[i] = <-task1Channel
 		flightsFromEachAirportMapArray[i] = <-task2Channel
+		totalNauticalMilesArray[i] = <-task3Channel
 		//SENDS THE DATA TO THE REDUCER
-		reducer(passengersOnEachFlightMapArray, flightsFromEachAirportMapArray, numberofCPUs)
 	}
+	reducer(passengersOnEachFlightMapArray, flightsFromEachAirportMapArray, totalNauticalMilesArray, numberofCPUs)
 }
 
 func checkLinesPerProcessor(lines int, cpus int) int {
