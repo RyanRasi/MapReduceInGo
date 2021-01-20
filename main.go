@@ -12,9 +12,11 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 )
 
 func main() {
+	start := time.Now()
 
 	numberofCPUs := runtime.NumCPU() //Calculates Current CPUs
 	passengersOnEachFlightMapArray := make(map[int]map[string]int)
@@ -36,6 +38,7 @@ func main() {
 
 	//Opens top 30 airports data file
 	file, err := os.Open(airportDataPath)
+	fmt.Println("MapReduce - Reading from Data Source")
 	if err != nil { //If there is an error then log the error
 		log.Fatal(err)
 	}
@@ -155,8 +158,10 @@ func main() {
 	task4Channel := make(chan map[string]string)   //Flights based on the ID number
 
 	// SENDS DATA TO THE MAPPER
+	fmt.Println("MapReduce - Mapping Task Started")
 	for i := 0; i < numberofCPUs; i++ {
 		go mapper(processorAllocatedLines[i], airportData, task1Channel, task2Channel, task3aChannel, task3bChannel, task4Channel)
+
 		passengersOnEachFlightMapArray[i] = <-task1Channel
 		flightsFromEachAirportMapArray[i] = <-task2Channel
 		totalNauticalMilesPerFlightArray[i] = <-task3aChannel
@@ -164,7 +169,15 @@ func main() {
 		flightsBasedOnID[i] = <-task4Channel
 		//SENDS THE DATA TO THE REDUCER
 	}
+	fmt.Println("MapReduce - Mapping Task Finished")
+	fmt.Println("MapReduce - Reducing Task Started")
 	reducer(passengersOnEachFlightMapArray, flightsFromEachAirportMapArray, totalNauticalMilesPerFlightArray, totalNauticalMilesPerPassengerArray, flightsBasedOnID, numberofCPUs)
+	fmt.Println("MapReduce - Reducing Task Finished")
+
+	t := time.Now()
+	elapsed := t.Sub(start)
+	fmt.Println("MapReduce - Time Elapsed: ", elapsed)
+
 }
 
 func checkLinesPerProcessor(lines int, cpus int) int {
