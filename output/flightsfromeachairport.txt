@@ -1,8 +1,8 @@
 IATA/FAA Code:    Airport:                 Flights: 
 DEN               DENVER                   44
 IAH               HOUSTON                  36
-CAN               GUANGZHOU                35
 ATL               ATLANTA                  35
+CAN               GUANGZHOU                35
 KUL               KUALA LUMPUR             32
 ORD               CHICAGO                  32
 JFK               NEW YORK                 30
@@ -15,17 +15,17 @@ BKK               BANGKOK                  16
 FCO               ROME                     14
 LAS               LAS VEGAS                14
 AMS               AMSTERDAM                13
-MUC               MUNICH                   13
 HND               TOKYO                    13
+MUC               MUNICH                   13
 MAD               MADRID                   12
 PEK               BEIJING                  11
 MIA               MIAMI                    11
 DFW               DALLAS/FORT WORTH        10
-HKG               HONG KONG                0
-SFO               SAN FRANCISCO            0
-IST               ISTANBUL                 0
-FRA               FRANKFURT                0
-PHX               PHOENIX                  0
-SIN               SINGAPORE                0
 DXB               DUBAI                    0
 LAX               LOS ANGELES              0
+HKG               HONG KONG                0
+PHX               PHOENIX                  0
+SIN               SINGAPORE                0
+FRA               FRANKFURT                0
+IST               ISTANBUL                 0
+SFO               SAN FRANCISCO            0
