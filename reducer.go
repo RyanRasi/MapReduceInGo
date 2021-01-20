@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairport map[int]map[string]int, totalNauticalMilesPerFlight map[int]map[string]string, totalNauticalMilesPerPassenger map[int]map[string]float64, numberOfCPUs int) {
+func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairport map[int]map[string]int, totalNauticalMilesPerFlight map[int]map[string]string, totalNauticalMilesPerPassenger map[int]map[string]float64, flightsBasedOnID map[int]map[string]string, numberOfCPUs int) {
 
 	//PASSENGERS ON EACH FLIGHT
 	dictPassengersOnEachFlight := make(map[string]int)
@@ -106,4 +106,23 @@ func reducer(passengersoneachflight map[int]map[string]int, flightsfromeachairpo
 	//fmt.Println(dictTotalNauticalMilesPerPassenger)
 
 	outputData(outputArrayFlights, "totalnauticalmiles", 3, outputArrayPassengers)
+
+	//FLIGHTS BASED ON THEIR ID NUMBER
+	dictFlightsBasedOnID := make(map[string]string)
+	for i := 0; i < numberOfCPUs; i++ {
+		for key, value := range flightsBasedOnID[i] {
+			dictFlightsBasedOnID[key] = dictFlightsBasedOnID[key] + value
+		}
+	}
+	//fmt.Println(dictFlightsBasedOnID)
+	outputArray = ""
+	for key, value := range dictFlightsBasedOnID {
+		if key == "--" {
+		} else {
+			tempValue := fmt.Sprint(value)
+			outputArray = outputArray + strings.Replace(key, "|", "        ", -1) + "   " + strings.Replace(tempValue, "-", "", 1) + "\n"
+		}
+	}
+	//fmt.Println(outputArray)
+	outputData(outputArray, "flightsBasedOnID", 4, "NONE")
 }
