@@ -15,12 +15,16 @@ Five output text files are compiled from this.
 5. Any error cases in the passenger data file.
 
 Each line in the passenger data file is in the form of...
+
 Passenger ID, Flight ID, From airport IATA/FAA code, Destination airport IATA/FAA code, Departure time (GMT), Total flight time (mins)
 And is formatted as so...
+
 XXXnnnnXXn, XXXnnnnX, XXX, XXX, n[10 - in UNIX Epoch time, n[1..4]
 Where X is Uppercase ASCII, n is digit 0..9 and [n..m] is the min/max range of the number
 of digits/characters in a string.
+
 For example:
+
 UES9151GS5,SQU6245R,DEN,FRA,1420564460,1049
 
 The errors were thus discovered using a REGEX statement of...
@@ -32,8 +36,11 @@ This was looped through all of the lines using the buffered reader where they ar
 
 A 3D array is created to hold the correct lines for each processor available.
 For example the arrays structure is [currentCPU][currentLine][0-5]
+
 If there are 8 processors available, and 400 correct lines in the file then the array size will be...
+
 [8][50][5]
+
 The 5 at the end will always be 5 due to thats the size of each line after it is split by a comma.
 
 4 channels are then made for each text file and for however many processors there are avaialable, then the same amount of concurrent functions are ran.
