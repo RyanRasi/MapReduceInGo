@@ -39,7 +39,7 @@ The 5 at the end will always be 5 due to thats the size of each line after it is
 4 channels are then made for each text file and for however many processors there are avaialable, then the same amount of concurrent functions are ran.
 The mappers first run which sorts all of the text files per task and returns the answer via a mapDictionary to the channels. That input is then sent to the reducer to combine the answers from each channel together and output the final text file.
 The code which controls the concurrent functions are as follows...
-```
+```go
 	task1Channel := make(chan map[string]int)      //Passengers on each flight
 	task2Channel := make(chan map[string]int)      //Flights from each airport
 	task3aChannel := make(chan map[string]string)  //Total Nautical Miles - Per Flight
